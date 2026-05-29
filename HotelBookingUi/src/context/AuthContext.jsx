@@ -1,24 +1,21 @@
-// File: src/context/AuthContext.jsx
-import React, { createContext, useState, useContext, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState, useContext } from 'react';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Giả lập kiểm tra token đăng nhập từ LocalStorage khi khởi chạy ứng dụng
+  const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('hotel_user');
     if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
+        return JSON.parse(savedUser);
+      } catch {
         localStorage.removeItem('hotel_user');
       }
     }
-    setLoading(false);
-  }, []);
+    return null;
+  });
+  const [loading] = useState(false);
 
   const login = (userData) => {
     setUser(userData);
