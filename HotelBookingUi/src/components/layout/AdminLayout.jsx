@@ -1,5 +1,4 @@
 // File: src/components/layout/AdminLayout.jsx
-import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 
 const AdminLayout = () => {

@@ -1,5 +1,4 @@
 // File: src/components/layout/Footer.jsx
-import React from 'react';
 import { useLocation } from 'react-router-dom';
 
 const Footer = () => {
@@ -17,7 +16,7 @@ const Footer = () => {
             🌟 GRAND <span className="text-gold-400">HARBOR</span>
           </span>
           <p className="text-xs text-stone-400 leading-relaxed">
-            Chuỗi khách sạn 5 sao mang đến trải nghiệm nghỉ dưỡng hoàn mỹ và đẳng cấp hàng đầu Việt Nam. Nơi kiến tạo những khoảnh khắc tuyệt vời nhất của bạn.
+            Khách sạn tiện nghi mang đến trải nghiệm nghỉ ngơi ấm cúng, sạch sẽ và thoải mái hàng đầu tại Đà Nẵng. Nơi dừng chân lý tưởng với mức giá hợp lý nhất dành cho bạn.
           </p>
         </div>
 
@@ -55,7 +54,7 @@ const Footer = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-stone-800 mt-12 pt-6 text-center text-xs text-stone-500">
-        <p>© 2026 Grand Harbor Hotel & Resort. Developed for SBA303 Group Project. All rights reserved.</p>
+        <p>© 2026 Grand Harbor Hotel. Developed for SBA303 Group Project. All rights reserved.</p>
       </div>
     </footer>
   );
