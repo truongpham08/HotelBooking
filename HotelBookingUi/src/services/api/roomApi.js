@@ -24,6 +24,31 @@ const roomApi = {
   getFeaturedRooms: () => {
     return axiosClient.get('/rooms', { params: { featured: true, size: 4 } });
   },
+
+  /**
+   * Thêm mới một phòng
+   * @param {Object} roomData
+   */
+  createRoom: (roomData) => {
+    return axiosClient.post('/rooms', roomData);
+  },
+
+  /**
+   * Cập nhật thông tin phòng
+   * @param {number|string} id
+   * @param {Object} roomData
+   */
+  updateRoom: (id, roomData) => {
+    return axiosClient.put(`/rooms/${id}`, roomData);
+  },
+
+  /**
+   * Xóa một phòng
+   * @param {number|string} id
+   */
+  deleteRoom: (id) => {
+    return axiosClient.delete(`/rooms/${id}`);
+  },
 };
 
 export default roomApi;
