@@ -80,7 +80,7 @@ const TESTIMONIALS = [
   {
     name: 'Lê Văn Hùng',
     role: 'Gia đình 4 người',
-    avatar: '👨‍👩‍👧‍�',
+    avatar: '👨‍👩‍👧‍👦',
     content: 'Đặt phòng gia đình, không gian thoải mái cho cả nhà. Nhân viên hỗ trợ nhiệt tình, check-in nhanh.',
     rating: 5,
   },
@@ -112,100 +112,65 @@ const HomePage = () => {
       {/* ──── HERO BANNER ──────────────────────────────────────────────────── */}
       <section
         id="hero"
-        className="relative min-h-[90vh] flex items-center justify-center overflow-hidden"
+        className="relative flex items-center justify-center"
         style={{
+          minHeight: '60vh',
           backgroundImage: 'url(/hero-banner.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
       >
         {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
+        <div className="absolute inset-0 bg-black/50" />
 
-        {/* Animated particles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full bg-gold-400/20 animate-pulse"
-              style={{
-                width: `${80 + i * 40}px`,
-                height: `${80 + i * 40}px`,
-                top: `${10 + i * 12}%`,
-                left: `${5 + i * 15}%`,
-                animationDelay: `${i * 0.8}s`,
-                animationDuration: `${3 + i}s`,
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="relative z-10 flex flex-col items-center px-4 text-center w-full max-w-6xl mx-auto">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 text-white/90 text-xs font-semibold px-4 py-1.5 rounded-full mb-6 animate-fade-in">
-            <span className="text-gold-300">✓</span>
-            Khách Sạn Tiện Nghi · Giá Tốt · Đà Nẵng
-            <span className="text-gold-300">✓</span>
-          </div>
-
+        <div className="relative z-10 flex flex-col items-center px-4 text-center w-full max-w-5xl mx-auto py-16">
           {/* Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold font-serif text-white leading-tight mb-4 drop-shadow-2xl">
-            Nghỉ Ngơi{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-300 to-yellow-200">
-              Thoải Mái
-            </span>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-serif text-white leading-tight mb-4 drop-shadow-lg">
+            Nghỉ Ngơi Thoải Mái
             <br />
-            Tại Grand Harbor
+            <span className="text-yellow-300">Tại Grand Harbor</span>
           </h1>
 
-          <p className="text-stone-200 text-base sm:text-lg max-w-xl mb-10 leading-relaxed font-light">
+          <p className="text-stone-200 text-base sm:text-lg max-w-xl mb-8 leading-relaxed">
             Phòng sạch sẽ, tiện nghi đầy đủ, vị trí trung tâm ngay tại Đà Nẵng.
             Đặt phòng dễ dàng – giá hợp lý – phục vụ tận tâm.
           </p>
 
           {/* Search bar */}
-          <div className="w-full max-w-5xl">
+          <div className="w-full max-w-4xl">
             <SearchBar />
           </div>
 
           {/* Quick stats */}
-          <div className="flex flex-wrap items-center justify-center gap-8 mt-10 text-white/80 text-sm">
+          <div className="flex flex-wrap items-center justify-center gap-8 mt-8 text-white/80 text-sm">
             <div className="text-center">
-              <p className="text-2xl font-extrabold text-gold-300">50+</p>
+              <p className="text-2xl font-extrabold text-yellow-300">50+</p>
               <p className="text-xs">Phòng nghỉ</p>
             </div>
             <div className="w-px h-8 bg-white/20" />
             <div className="text-center">
-              <p className="text-2xl font-extrabold text-gold-300">2K+</p>
+              <p className="text-2xl font-extrabold text-yellow-300">2K+</p>
               <p className="text-xs">Lượt khách</p>
             </div>
             <div className="w-px h-8 bg-white/20" />
             <div className="text-center">
-              <p className="text-2xl font-extrabold text-gold-300">4.6★</p>
+              <p className="text-2xl font-extrabold text-yellow-300">4.6★</p>
               <p className="text-xs">Đánh giá trung bình</p>
             </div>
             <div className="w-px h-8 bg-white/20" />
             <div className="text-center">
-              <p className="text-2xl font-extrabold text-gold-300">5+</p>
+              <p className="text-2xl font-extrabold text-yellow-300">5+</p>
               <p className="text-xs">Năm hoạt động</p>
             </div>
           </div>
         </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/50 text-xs animate-bounce">
-          <span>Khám phá thêm</span>
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
       </section>
 
       {/* ──── FEATURED ROOMS ───────────────────────────────────────────────── */}
-      <section id="featured-rooms" className="py-20 px-4">
+      <section id="featured-rooms" className="py-14 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-gold-600 font-semibold text-xs uppercase tracking-widest mb-2">
+          <div className="text-center mb-10">
+            <p className="text-amber-600 font-semibold text-xs uppercase tracking-widest mb-2">
               Phòng Được Chọn Nhiều
             </p>
             <h2 className="text-3xl sm:text-4xl font-extrabold font-serif text-stone-900 mb-3">
@@ -219,7 +184,7 @@ const HomePage = () => {
           {loadingRooms ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-md animate-pulse">
+                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-md">
                   <div className="h-52 bg-stone-200" />
                   <div className="p-5 space-y-3">
                     <div className="h-4 bg-stone-200 rounded w-3/4" />
@@ -241,7 +206,7 @@ const HomePage = () => {
             <Link
               id="view-all-rooms-btn"
               to="/search"
-              className="inline-flex items-center gap-2 bg-white border-2 border-gold-500 text-gold-700 hover:bg-gold-50 font-bold px-8 py-3 rounded-2xl text-sm transition-all duration-200 shadow hover:shadow-md"
+              className="inline-flex items-center gap-2 bg-white border-2 border-amber-500 text-amber-700 hover:bg-amber-50 font-bold px-8 py-3 rounded-xl text-sm shadow"
             >
               Xem Tất Cả Phòng
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -253,10 +218,10 @@ const HomePage = () => {
       </section>
 
       {/* ──── WHY CHOOSE US ────────────────────────────────────────────────── */}
-      <section id="why-us" className="py-20 px-4 bg-gradient-to-br from-stone-900 to-stone-800">
+      <section id="why-us" className="py-14 px-4 bg-stone-900">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-gold-400 font-semibold text-xs uppercase tracking-widest mb-2">
+          <div className="text-center mb-10">
+            <p className="text-amber-400 font-semibold text-xs uppercase tracking-widest mb-2">
               Tại Sao Chọn Chúng Tôi
             </p>
             <h2 className="text-3xl sm:text-4xl font-extrabold font-serif text-white mb-3">
@@ -271,18 +236,16 @@ const HomePage = () => {
             {AMENITIES_ICONS.map((item, idx) => (
               <div
                 key={idx}
-                className="group text-center p-5 rounded-2xl bg-white/5 hover:bg-gold-600/20 border border-white/10 hover:border-gold-500/50 transition-all duration-300 cursor-default"
+                className="text-center p-5 rounded-xl bg-white/5 border border-white/10"
               >
-                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">
-                  {item.icon}
-                </div>
+                <div className="text-4xl mb-3">{item.icon}</div>
                 <p className="text-white/80 text-xs font-medium leading-tight">{item.label}</p>
               </div>
             ))}
           </div>
 
           {/* Feature highlights */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
             {[
               {
                 icon: '🔒',
@@ -300,7 +263,7 @@ const HomePage = () => {
                 desc: 'Đội ngũ lễ tân luôn sẵn sàng hỗ trợ trong giờ làm việc và cả buổi tối.',
               },
             ].map((f, i) => (
-              <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
+              <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-6">
                 <span className="text-3xl">{f.icon}</span>
                 <h3 className="text-white font-bold mt-3 mb-2">{f.title}</h3>
                 <p className="text-stone-400 text-sm leading-relaxed">{f.desc}</p>
@@ -311,10 +274,10 @@ const HomePage = () => {
       </section>
 
       {/* ──── TESTIMONIALS ─────────────────────────────────────────────────── */}
-      <section id="testimonials" className="py-20 px-4">
+      <section id="testimonials" className="py-14 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-gold-600 font-semibold text-xs uppercase tracking-widest mb-2">
+          <div className="text-center mb-10">
+            <p className="text-amber-600 font-semibold text-xs uppercase tracking-widest mb-2">
               Khách Hàng Nói Gì
             </p>
             <h2 className="text-3xl sm:text-4xl font-extrabold font-serif text-stone-900 mb-3">
@@ -326,13 +289,13 @@ const HomePage = () => {
             {TESTIMONIALS.map((t, i) => (
               <div
                 key={i}
-                className="bg-white border border-stone-100 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col"
+                className="bg-white border border-stone-100 rounded-xl p-6 shadow-sm flex flex-col"
               >
                 <div className="flex text-yellow-400 text-base mb-4">
                   {'★'.repeat(t.rating)}
                 </div>
                 <p className="text-stone-600 text-sm leading-relaxed italic flex-1 mb-5">
-                  "{t.content}"
+                  &ldquo;{t.content}&rdquo;
                 </p>
                 <div className="flex items-center gap-3 pt-4 border-t border-stone-100">
                   <span className="text-3xl">{t.avatar}</span>
@@ -348,7 +311,7 @@ const HomePage = () => {
       </section>
 
       {/* ──── CTA BANNER ───────────────────────────────────────────────────── */}
-      <section id="cta" className="py-16 px-4 bg-gradient-to-r from-gold-600 to-gold-500">
+      <section id="cta" className="py-14 px-4 bg-amber-600">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-extrabold font-serif text-white mb-4">
             Đặt Phòng Ngay Hôm Nay?
@@ -360,13 +323,13 @@ const HomePage = () => {
             <Link
               id="cta-book-btn"
               to="/search"
-              className="bg-white text-gold-700 font-bold px-8 py-3 rounded-2xl hover:bg-stone-100 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95"
+              className="bg-white text-amber-700 font-bold px-8 py-3 rounded-xl hover:bg-stone-100 shadow-md"
             >
               Đặt Phòng Ngay
             </Link>
             <a
               href="tel:18001234"
-              className="border-2 border-white text-white font-bold px-8 py-3 rounded-2xl hover:bg-white/10 transition-all duration-200"
+              className="border-2 border-white text-white font-bold px-8 py-3 rounded-xl hover:bg-white/10"
             >
               📞 1800 1234
             </a>
