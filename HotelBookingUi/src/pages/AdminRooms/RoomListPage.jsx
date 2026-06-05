@@ -1,8 +1,8 @@
 // src/pages/AdminRooms/RoomListPage.jsx - THÀNH VIÊN 4
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Plus, Search, Edit2, Trash2, SlidersHorizontal, 
+import {
+  Plus, Search, Edit2, Trash2, SlidersHorizontal,
   AlertCircle, Check, X, Info, Maximize2, Users, AlertTriangle
 } from 'lucide-react';
 import roomApi from '../../services/api/roomApi';
@@ -76,12 +76,8 @@ const RoomListPage = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('ALL');
-  const [filterStatus, setFilterStatus] = useState('ALL');
-  
+
   // Modals & Notifs
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const showToast = (message, type = 'success') => {
@@ -127,52 +123,9 @@ const RoomListPage = () => {
     loadRooms();
   }, []);
 
-  const handleDelete = async (id) => {
-    try {
-      if (isOffline) {
-        const localRooms = JSON.parse(localStorage.getItem('admin_rooms') || '[]');
-        const updated = localRooms.filter(r => r.id !== id);
-        localStorage.setItem('admin_rooms', JSON.stringify(updated));
-        setRooms(updated);
-        showToast("Xóa phòng thành công trên trình duyệt (Offline)!", 'success');
-      } else {
-        await roomApi.deleteRoom(id);
-        const updated = rooms.filter(r => r.id !== id);
-        setRooms(updated);
-        localStorage.setItem('admin_rooms', JSON.stringify(updated));
-        showToast("Xóa phòng thành công trên hệ thống!", 'success');
-      }
-    } catch (error) {
-      console.error("Lỗi khi xóa phòng:", error);
-      // Fallback
-      const localRooms = JSON.parse(localStorage.getItem('admin_rooms') || '[]');
-      const updated = localRooms.filter(r => r.id !== id);
-      localStorage.setItem('admin_rooms', JSON.stringify(updated));
-      setRooms(updated);
-      setIsOffline(true);
-      showToast("Lỗi API! Phòng đã được xóa trên bộ nhớ tạm (Offline).", 'warning');
-    }
-    setDeleteConfirmId(null);
-  };
 
-  // Lọc phòng
-  const filteredRooms = rooms.filter(room => {
-    const matchesSearch = room.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'ALL' || room.roomType === filterType;
-    let matchesStatus = true;
-    if (filterStatus === 'AVAILABLE') matchesStatus = room.available === true;
-    if (filterStatus === 'UNAVAILABLE') matchesStatus = room.available === false;
-    
-    return matchesSearch && matchesType && matchesStatus;
-  });
 
-  // Tính toán thống kê nhanh
-  const totalRoomsCount = rooms.length;
-  const availableCount = rooms.filter(r => r.available).length;
-  const maintenanceCount = totalRoomsCount - availableCount;
-  const averagePrice = totalRoomsCount > 0 
-    ? Math.round(rooms.reduce((acc, curr) => acc + (curr.pricePerNight || 0), 0) / totalRoomsCount) 
-    : 0;
+
 
   const formatPrice = (price) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -181,12 +134,11 @@ const RoomListPage = () => {
     <div className="space-y-6">
       {/* Toast Notification */}
       {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border transition-all duration-300 animate-slide-in-right ${
-          toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border transition-all duration-300 animate-slide-in-right ${toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
           toast.type === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-800' :
-          toast.type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
-          'bg-rose-50 border-rose-200 text-rose-800'
-        }`}>
+            toast.type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
+              'bg-rose-50 border-rose-200 text-rose-800'
+          }`}>
           {toast.type === 'success' && <Check className="w-5 h-5 text-emerald-600" />}
           {toast.type === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-600" />}
           {toast.type === 'info' && <Info className="w-5 h-5 text-blue-600" />}
@@ -205,114 +157,11 @@ const RoomListPage = () => {
             Quản Lý Danh Sách Phòng
           </h1>
           <p className="text-sm text-stone-500 mt-1">
-            Xem, sửa đổi và thêm các phòng nghỉ của khách sạn Grand Harbor.
+            Xem và sửa đổi các phòng nghỉ của khách sạn Grand Harbor.
           </p>
         </div>
-        <Link
-          to="/admin/rooms/add"
-          className="inline-flex items-center justify-center gap-2 bg-gold-600 hover:bg-gold-700 text-white font-bold px-5 py-2.5 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Thêm Phòng Mới
-        </Link>
       </div>
 
-      {/* Bảng thống kê nhanh */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs text-stone-400 font-bold uppercase tracking-wider">Tổng số phòng</p>
-            <h3 className="text-2xl font-bold text-stone-900 mt-1">{totalRoomsCount}</h3>
-          </div>
-          <span className="p-3 bg-stone-50 rounded-xl border border-stone-100 text-stone-600">🏢</span>
-        </div>
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs text-stone-400 font-bold uppercase tracking-wider">Đang sẵn sàng</p>
-            <h3 className="text-2xl font-bold text-emerald-600 mt-1">{availableCount}</h3>
-          </div>
-          <span className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-600">✅</span>
-        </div>
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs text-stone-400 font-bold uppercase tracking-wider">Bận / Bảo trì</p>
-            <h3 className="text-2xl font-bold text-amber-600 mt-1">{maintenanceCount}</h3>
-          </div>
-          <span className="p-3 bg-amber-50 rounded-xl border border-amber-100 text-amber-600">🛠️</span>
-        </div>
-        <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs text-stone-400 font-bold uppercase tracking-wider">Giá trung bình</p>
-            <h3 className="text-xl font-bold text-gold-600 mt-1">{formatPrice(averagePrice)}</h3>
-          </div>
-          <span className="p-3 bg-gold-50 rounded-xl border border-gold-100 text-gold-600">💰</span>
-        </div>
-      </div>
-
-      {/* Thông báo Offline Mode */}
-      {isOffline && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 flex items-center gap-3 text-sm">
-          <Info className="w-5 h-5 text-amber-600 flex-shrink-0" />
-          <div>
-            <span className="font-bold">Đang chạy ở chế độ Demo (Offline):</span> Các chỉnh sửa được lưu trực tiếp vào bộ nhớ cục bộ `localStorage` của trình duyệt này và sẽ không mất khi tải lại trang.
-          </div>
-        </div>
-      )}
-
-      {/* Thanh công cụ tìm kiếm và lọc */}
-      <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Ô Tìm kiếm */}
-        <div className="relative flex-grow max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-          <input
-            type="text"
-            placeholder="Tìm phòng theo tên..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
-          />
-          {searchTerm && (
-            <button 
-              onClick={() => setSearchTerm('')} 
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Các bộ lọc */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-stone-500" />
-            <span className="text-xs font-semibold text-stone-500">Lọc theo:</span>
-          </div>
-
-          {/* Loại phòng */}
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="bg-stone-50 border border-stone-200 text-stone-700 text-xs font-bold py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-500"
-          >
-            <option value="ALL">Tất cả loại phòng</option>
-            <option value="STANDARD">Standard</option>
-            <option value="DELUXE">Deluxe</option>
-            <option value="SUITE">Suite</option>
-            <option value="PRESIDENTIAL">Presidential</option>
-          </select>
-
-          {/* Trạng thái */}
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-stone-50 border border-stone-200 text-stone-700 text-xs font-bold py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-500"
-          >
-            <option value="ALL">Tất cả trạng thái</option>
-            <option value="AVAILABLE">Còn phòng (Sẵn sàng)</option>
-            <option value="UNAVAILABLE">Hết phòng / Bảo trì</option>
-          </select>
-        </div>
-      </div>
 
       {/* Bảng Danh sách Phòng */}
       {loading ? (
@@ -324,19 +173,13 @@ const RoomListPage = () => {
           </div>
           <p className="text-stone-500 text-sm font-medium">Đang tải danh sách phòng...</p>
         </div>
-      ) : filteredRooms.length === 0 ? (
+      ) : rooms.length === 0 ? (
         <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center shadow-sm">
           <AlertCircle className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-stone-800 font-serif">Không tìm thấy phòng</h3>
+          <h3 className="text-lg font-bold text-stone-800 font-serif">Chưa có phòng nào</h3>
           <p className="text-stone-500 text-sm mt-1 max-w-md mx-auto">
-            Không có kết quả phòng nào trùng khớp với từ khóa tìm kiếm hoặc bộ lọc hiện tại.
+            Hiện tại hệ thống chưa có phòng nào.
           </p>
-          <button 
-            onClick={() => { setSearchTerm(''); setFilterType('ALL'); setFilterStatus('ALL'); }}
-            className="mt-4 text-xs font-bold text-gold-600 hover:text-gold-700 underline"
-          >
-            Đặt lại bộ lọc
-          </button>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
@@ -350,23 +193,22 @@ const RoomListPage = () => {
                   <th className="py-4 px-6 text-right">Giá / Đêm</th>
                   <th className="py-4 px-6 text-center">Trạng thái</th>
                   <th className="py-4 px-6">Tiện nghi</th>
-                  <th className="py-4 px-6 text-center">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100 text-sm">
-                {filteredRooms.map((room) => {
+                {rooms.map((room) => {
                   const typeLabel = ROOM_TYPE_LABELS[room.roomType] || ROOM_TYPE_LABELS.STANDARD;
                   const imageSrc = room.image || '/room-deluxe.png';
-                  
+
                   return (
                     <tr key={room.id} className="hover:bg-stone-50/50 transition-colors">
                       {/* Ảnh & Tên phòng */}
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-4">
                           <div className="w-14 h-14 rounded-xl overflow-hidden border border-stone-200 bg-stone-100 flex-shrink-0">
-                            <img 
-                              src={imageSrc} 
-                              alt={room.name} 
+                            <img
+                              src={imageSrc}
+                              alt={room.name}
                               className="w-full h-full object-cover"
                               onError={(e) => { e.target.src = '/room-deluxe.png'; }}
                             />
@@ -408,11 +250,10 @@ const RoomListPage = () => {
 
                       {/* Trạng thái */}
                       <td className="py-4 px-6 text-center">
-                        <span className={`inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-0.5 rounded-full ${
-                          room.available 
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                            : 'bg-rose-50 text-rose-700 border border-rose-200'
-                        }`}>
+                        <span className={`inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-0.5 rounded-full ${room.available
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border border-rose-200'
+                          }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${room.available ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                           {room.available ? 'Đang trống' : 'Hết phòng / Bảo trì'}
                         </span>
@@ -434,25 +275,7 @@ const RoomListPage = () => {
                         </div>
                       </td>
 
-                      {/* Thao tác */}
-                      <td className="py-4 px-6 text-center">
-                        <div className="inline-flex items-center gap-2">
-                          <Link
-                            to={`/admin/rooms/edit/${room.id}`}
-                            className="p-1.5 text-stone-500 hover:text-gold-600 hover:bg-gold-50 rounded-lg transition-colors border border-stone-200 hover:border-gold-300"
-                            title="Sửa phòng"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Link>
-                          <button
-                            onClick={() => setDeleteConfirmId(room.id)}
-                            className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-stone-200 hover:border-rose-300"
-                            title="Xóa phòng"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
+
                     </tr>
                   );
                 })}
@@ -462,38 +285,7 @@ const RoomListPage = () => {
         </div>
       )}
 
-      {/* Confirmation Modal */}
-      {deleteConfirmId !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm transition-opacity duration-300">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-stone-200 animate-scale-in">
-            <div className="flex items-center gap-3 text-rose-600 mb-4">
-              <span className="p-2 bg-rose-50 rounded-xl border border-rose-100">
-                <AlertTriangle className="w-6 h-6" />
-              </span>
-              <h3 className="text-lg font-bold font-serif text-stone-900">Xác Nhận Xóa Phòng</h3>
-            </div>
-            
-            <p className="text-sm text-stone-600 leading-relaxed">
-              Bạn có chắc chắn muốn xóa phòng nghỉ này khỏi hệ thống quản lý? Thao tác này sẽ không thể khôi phục lại.
-            </p>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteConfirmId(null)}
-                className="px-4 py-2 text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded-xl font-bold text-sm transition-colors"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirmId)}
-                className="px-4 py-2 text-white bg-rose-600 hover:bg-rose-700 rounded-xl font-bold text-sm transition-colors shadow shadow-rose-200 hover:shadow-md"
-              >
-                Xác nhận xóa
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
