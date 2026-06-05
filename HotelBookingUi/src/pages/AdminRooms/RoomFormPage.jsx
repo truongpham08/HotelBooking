@@ -98,7 +98,7 @@ const RoomFormPage = () => {
         </Link>
         <div>
           <h1 className="text-2xl font-serif font-extrabold text-stone-900 tracking-tight">
-            Thêm / Cập Nhật Phòng
+            Thêm Phòng Mới
           </h1>
           <p className="text-sm text-stone-500 mt-0.5">
             Giao diện cấu hình thông số phòng nghỉ.

@@ -24,6 +24,7 @@ import SuccessPage from './pages/Booking/SuccessPage';
 import RoomListPage from './pages/AdminRooms/RoomListPage';
 import RoomFormPage from './pages/AdminRooms/RoomFormPage';
 
+
 // Phân hệ 5: Admin Bookings (Thành viên 5)
 import BookingListPage from './pages/AdminBookings/BookingListPage';
 import DashboardPage from './pages/AdminBookings/DashboardPage';
@@ -40,6 +41,8 @@ function App() {
           <Routes>
             {/* --- CÁC ROUTE PHÍA KHÁCH HÀNG (CUSTOMER ROUTES) --- */}
             <Route path="/" element={<HomePage />} />
+            <Route path="/add" element={<RoomFormPage />} />
+
             <Route path="/search" element={<SearchPage />} />
             <Route path="/room/:id" element={<RoomDetailPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
@@ -62,6 +65,7 @@ function App() {
               <Route path="rooms" element={<RoomListPage />} />
               <Route path="rooms/add" element={<RoomFormPage />} />
               <Route path="rooms/edit/:id" element={<RoomFormPage />} />
+
             </Route>
 
             {/* Trang 404 nếu không tìm thấy Route */}
