@@ -1,101 +1,13 @@
-
+// File: src/pages/Home/SearchPage.jsx
+// Thành viên 2 - Trang tìm kiếm phòng với bộ lọc đầy đủ
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import SearchBar from '../../components/home/SearchBar';
 import RoomCard from '../../components/home/RoomCard';
 import roomApi from '../../services/api/roomApi';
+import { MOCK_ROOMS } from '../../services/mockRooms';
 
 // ─── Mock data fallback ───────────────────────────────────────────────────────
-const MOCK_ROOMS = [
-  {
-    id: 1,
-    name: 'Grand Deluxe Ocean View',
-    roomType: 'DELUXE',
-    pricePerNight: 2500000,
-    capacity: 2,
-    area: 45,
-    image: '/room-deluxe.png',
-    amenities: ['WiFi', 'Minibar', 'Bồn tắm', 'Ban công'],
-    available: true,
-  },
-  {
-    id: 2,
-    name: 'Presidential Suite',
-    roomType: 'SUITE',
-    pricePerNight: 8500000,
-    capacity: 4,
-    area: 120,
-    image: '/room-suite.png',
-    amenities: ['WiFi', 'Bể bơi riêng', 'Butler', 'Phòng khách', 'Bếp'],
-    available: true,
-  },
-  {
-    id: 3,
-    name: 'Superior Comfort Room',
-    roomType: 'STANDARD',
-    pricePerNight: 1200000,
-    capacity: 2,
-    area: 30,
-    image: '/room-standard.png',
-    amenities: ['WiFi', 'TV 55"', 'Điều hòa'],
-    available: true,
-  },
-  {
-    id: 4,
-    name: 'Family Deluxe Suite',
-    roomType: 'DELUXE',
-    pricePerNight: 3800000,
-    capacity: 5,
-    area: 75,
-    image: '/room-deluxe.png',
-    amenities: ['WiFi', '2 Phòng ngủ', 'Bếp nhỏ', 'Giường phụ'],
-    available: true,
-  },
-  {
-    id: 5,
-    name: 'Classic Standard Room',
-    roomType: 'STANDARD',
-    pricePerNight: 950000,
-    capacity: 1,
-    area: 25,
-    image: '/room-standard.png',
-    amenities: ['WiFi', 'Điều hòa', 'Tủ lạnh nhỏ'],
-    available: false,
-  },
-  {
-    id: 6,
-    name: 'Honeymoon Ocean Suite',
-    roomType: 'SUITE',
-    pricePerNight: 6200000,
-    capacity: 2,
-    area: 90,
-    image: '/room-suite.png',
-    amenities: ['WiFi', 'Bồn tắm ngoài trời', 'Rượu vang', 'Hoa tươi'],
-    available: true,
-  },
-  {
-    id: 7,
-    name: 'Executive Business Room',
-    roomType: 'DELUXE',
-    pricePerNight: 2200000,
-    capacity: 2,
-    area: 40,
-    image: '/room-deluxe.png',
-    amenities: ['WiFi tốc độ cao', 'Bàn làm việc', 'In ấn', 'Minibar'],
-    available: true,
-  },
-  {
-    id: 8,
-    name: 'Presidential Grand Suite',
-    roomType: 'PRESIDENTIAL',
-    pricePerNight: 15000000,
-    capacity: 6,
-    area: 250,
-    image: '/room-suite.png',
-    amenities: ['Butler riêng', 'Bể bơi', 'Phòng tập gym', 'Bếp trưởng'],
-    available: true,
-  },
-];
 
 const ROOM_TYPES = [
   { value: '', label: 'Tất cả loại phòng' },
@@ -130,10 +42,7 @@ const FilterSection = ({ title, children }) => (
 );
 
 const CheckboxOption = ({ id, label, checked, onChange }) => (
-  <label
-    htmlFor={id}
-    className="flex items-center gap-2.5 cursor-pointer group py-1"
-  >
+  <label htmlFor={id} className="flex items-center gap-2.5 cursor-pointer py-1">
     <input
       id={id}
       type="checkbox"
@@ -141,10 +50,61 @@ const CheckboxOption = ({ id, label, checked, onChange }) => (
       onChange={onChange}
       className="w-4 h-4 accent-amber-600 rounded cursor-pointer"
     />
-    <span className="text-sm text-stone-600 group-hover:text-stone-900 transition-colors">
-      {label}
-    </span>
+    <span className="text-sm text-stone-600">{label}</span>
   </label>
+);
+
+const FilterChip = ({ label, onRemove }) => (
+  <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">
+    {label}
+    <button
+      onClick={onRemove}
+      className="text-amber-500 hover:text-red-500 leading-none text-sm"
+      aria-label="Xóa bộ lọc"
+    >
+      ×
+    </button>
+  </span>
+);
+
+const SkeletonCard = () => (
+  <div className="bg-white rounded-2xl overflow-hidden shadow-md">
+    <div className="h-52 bg-stone-200" />
+    <div className="p-5 space-y-3">
+      <div className="h-4 bg-stone-200 rounded-full w-3/4" />
+      <div className="h-3 bg-stone-100 rounded-full w-1/2" />
+      <div className="flex gap-1.5 mt-2">
+        <div className="h-5 bg-stone-100 rounded-full w-12" />
+        <div className="h-5 bg-stone-100 rounded-full w-16" />
+      </div>
+      <div className="flex justify-between items-end pt-2">
+        <div>
+          <div className="h-3 bg-stone-100 rounded w-10 mb-1" />
+          <div className="h-5 bg-stone-200 rounded w-24" />
+        </div>
+        <div className="h-8 bg-stone-200 rounded-xl w-20" />
+      </div>
+    </div>
+  </div>
+);
+
+const EmptyState = ({ onReset }) => (
+  <div className="flex flex-col items-center justify-center py-20 text-center">
+    <div className="text-6xl mb-4">🔍</div>
+    <h3 className="text-xl font-bold text-stone-800 mb-2">Không tìm thấy phòng phù hợp</h3>
+    <p className="text-stone-500 text-sm max-w-sm mb-6">
+      Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm để xem nhiều kết quả hơn.
+    </p>
+    <button
+      onClick={onReset}
+      className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-2.5 rounded-xl shadow"
+    >
+      Xóa Bộ Lọc
+    </button>
+    <Link to="/" className="mt-3 text-sm text-stone-400 hover:text-stone-600 underline underline-offset-2">
+      Quay về trang chủ
+    </Link>
+  </div>
 );
 
 // ─── Main SearchPage ──────────────────────────────────────────────────────────
@@ -155,7 +115,7 @@ const SearchPage = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalResults, setTotalResults] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // mobile sidebar
+
 
   // Filters state
   const [filters, setFilters] = useState({
@@ -199,7 +159,7 @@ const SearchPage = () => {
 
   // ── Fetch rooms ────────────────────────────────────────────────────────────
   const fetchRooms = useCallback(async () => {
-    await Promise.resolve(); // Tránh render phân tầng đồng bộ trong useEffect
+    await Promise.resolve();
     setLoading(true);
     try {
       const params = {
@@ -223,7 +183,6 @@ const SearchPage = () => {
       setRooms(result);
       setTotalResults(result.length);
     } catch {
-      // Use mock data if API fails
       let result = applyMockFilters(MOCK_ROOMS, filters);
       result = applySortAndFilter(result, filters);
       setRooms(result);
@@ -234,7 +193,6 @@ const SearchPage = () => {
   }, [filters]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRooms();
   }, [fetchRooms]);
 
@@ -265,15 +223,15 @@ const SearchPage = () => {
     filters.availableOnly ? 'avail' : '',
   ].filter(Boolean).length;
 
-  // ─── Sidebar Filter Panel ────────────────────────────────────────────────
-  const renderFilterPanel = () => (
-    <aside className="w-full bg-white rounded-2xl shadow-md border border-stone-100 p-6">
+  // ─── Filter Panel ────────────────────────────────────────────────────────
+  const FilterPanel = () => (
+    <aside className="w-full bg-white rounded-xl shadow-sm border border-stone-100 p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <h2 className="font-bold text-stone-900 text-base flex items-center gap-2">
           🎛️ Bộ Lọc
           {activeFilterCount > 0 && (
-            <span className="bg-gold-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+            <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
               {activeFilterCount}
             </span>
           )}
@@ -295,9 +253,9 @@ const SearchPage = () => {
             <label
               key={t.value}
               htmlFor={`type-${t.value}`}
-              className={`flex items-center gap-2.5 cursor-pointer py-1.5 px-2 rounded-lg transition-colors ${filters.roomType === t.value
-                  ? 'bg-gold-50 text-gold-700'
-                  : 'hover:bg-stone-50 text-stone-600'
+              className={`flex items-center gap-2.5 cursor-pointer py-1.5 px-2 rounded-lg ${filters.roomType === t.value
+                ? 'bg-amber-50 text-amber-700'
+                : 'text-stone-600'
                 }`}
             >
               <input
@@ -322,9 +280,9 @@ const SearchPage = () => {
             <label
               key={idx}
               htmlFor={`price-${idx}`}
-              className={`flex items-center gap-2.5 cursor-pointer py-1.5 px-2 rounded-lg transition-colors ${filters.priceRange === idx
-                  ? 'bg-gold-50 text-gold-700'
-                  : 'hover:bg-stone-50 text-stone-600'
+              className={`flex items-center gap-2.5 cursor-pointer py-1.5 px-2 rounded-lg ${filters.priceRange === idx
+                ? 'bg-amber-50 text-amber-700'
+                : 'text-stone-600'
                 }`}
             >
               <input
@@ -348,9 +306,9 @@ const SearchPage = () => {
             <button
               key={n}
               onClick={() => updateFilter('capacity', n)}
-              className={`py-1.5 rounded-lg text-xs font-semibold border transition-all ${filters.capacity === n
-                  ? 'bg-gold-600 text-white border-gold-600 shadow'
-                  : 'bg-white border-stone-200 text-stone-600 hover:border-gold-400 hover:text-gold-600'
+              className={`py-1.5 rounded-lg text-xs font-semibold border ${filters.capacity === n
+                ? 'bg-amber-600 text-white border-amber-600'
+                : 'bg-white border-stone-200 text-stone-600 hover:border-amber-400 hover:text-amber-600'
                 }`}
             >
               {n === '' ? 'Tất cả' : `${n}+`}
@@ -405,19 +363,6 @@ const SearchPage = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Mobile filter toggle */}
-            <button
-              id="mobile-filter-btn"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden flex items-center gap-2 border border-stone-200 bg-white text-stone-700 text-sm font-semibold px-4 py-2 rounded-xl shadow-sm hover:border-gold-400 transition"
-            >
-              🎛️ Lọc
-              {activeFilterCount > 0 && (
-                <span className="bg-gold-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
 
             {/* Sort dropdown */}
             <div className="flex items-center gap-2">
@@ -428,7 +373,7 @@ const SearchPage = () => {
                 id="sort-select"
                 value={filters.sortBy}
                 onChange={(e) => updateFilter('sortBy', e.target.value)}
-                className="border border-stone-200 bg-white rounded-xl px-3 py-2 text-sm text-stone-700 outline-none focus:ring-2 focus:ring-gold-400 focus:border-gold-400 transition shadow-sm"
+                className="border border-stone-200 bg-white rounded-xl px-3 py-2 text-sm text-stone-700 outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 shadow-sm"
               >
                 {SORT_OPTIONS.map((s) => (
                   <option key={s.value} value={s.value}>{s.label}</option>
@@ -477,40 +422,12 @@ const SearchPage = () => {
         {/* ── Main grid: sidebar + results ── */}
         <div className="flex gap-6">
 
-          {/* Sidebar – desktop */}
-          <div className="hidden lg:block w-64 shrink-0">
+          {/* Sidebar */}
+          <div className="w-64 shrink-0">
             <div className="sticky top-36">
-              {renderFilterPanel()}
+              <FilterPanel />
             </div>
           </div>
-
-          {/* Mobile sidebar overlay */}
-          {sidebarOpen && (
-            <div className="lg:hidden fixed inset-0 z-50 flex">
-              <div
-                className="flex-1 bg-black/40"
-                onClick={() => setSidebarOpen(false)}
-              />
-              <div className="w-72 bg-stone-50 h-full overflow-y-auto p-4 shadow-2xl">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-bold text-stone-900">Bộ Lọc</h2>
-                  <button
-                    onClick={() => setSidebarOpen(false)}
-                    className="text-stone-400 hover:text-stone-700 text-2xl leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-                {renderFilterPanel()}
-                <button
-                  onClick={() => setSidebarOpen(false)}
-                  className="w-full mt-4 bg-gold-600 text-white font-bold py-3 rounded-xl"
-                >
-                  Áp Dụng Bộ Lọc ({totalResults} phòng)
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Results grid */}
           <div className="flex-1 min-w-0">
@@ -536,15 +453,15 @@ const SearchPage = () => {
                     {[1, 2, 3].map((p) => (
                       <button
                         key={p}
-                        className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${p === 1
-                            ? 'bg-gold-600 text-white shadow'
-                            : 'bg-white border border-stone-200 text-stone-600 hover:border-gold-400 hover:text-gold-600'
+                        className={`w-9 h-9 rounded-lg text-sm font-semibold border ${p === 1
+                          ? 'bg-amber-600 text-white border-amber-600'
+                          : 'bg-white border-stone-200 text-stone-600 hover:border-amber-400 hover:text-amber-600'
                           }`}
                       >
                         {p}
                       </button>
                     ))}
-                    <button className="w-9 h-9 rounded-lg text-sm font-semibold bg-white border border-stone-200 text-stone-500 hover:border-gold-400 transition-all">
+                    <button className="w-9 h-9 rounded-lg text-sm font-semibold bg-white border border-stone-200 text-stone-500 hover:border-amber-400">
                       →
                     </button>
                   </div>
@@ -557,60 +474,5 @@ const SearchPage = () => {
     </div>
   );
 };
-
-// ─── Helper sub-components ────────────────────────────────────────────────────
-
-const FilterChip = ({ label, onRemove }) => (
-  <span className="inline-flex items-center gap-1.5 bg-gold-50 border border-gold-200 text-gold-700 text-xs font-semibold px-3 py-1 rounded-full">
-    {label}
-    <button
-      onClick={onRemove}
-      className="text-gold-500 hover:text-red-500 transition-colors leading-none text-sm"
-      aria-label="Xóa bộ lọc"
-    >
-      ×
-    </button>
-  </span>
-);
-
-const SkeletonCard = () => (
-  <div className="bg-white rounded-2xl overflow-hidden shadow-md animate-pulse">
-    <div className="h-52 bg-stone-200" />
-    <div className="p-5 space-y-3">
-      <div className="h-4 bg-stone-200 rounded-full w-3/4" />
-      <div className="h-3 bg-stone-100 rounded-full w-1/2" />
-      <div className="flex gap-1.5 mt-2">
-        <div className="h-5 bg-stone-100 rounded-full w-12" />
-        <div className="h-5 bg-stone-100 rounded-full w-16" />
-      </div>
-      <div className="flex justify-between items-end pt-2">
-        <div>
-          <div className="h-3 bg-stone-100 rounded w-10 mb-1" />
-          <div className="h-5 bg-stone-200 rounded w-24" />
-        </div>
-        <div className="h-8 bg-stone-200 rounded-xl w-20" />
-      </div>
-    </div>
-  </div>
-);
-
-const EmptyState = ({ onReset }) => (
-  <div className="flex flex-col items-center justify-center py-20 text-center">
-    <div className="text-6xl mb-4">🔍</div>
-    <h3 className="text-xl font-bold text-stone-800 mb-2">Không tìm thấy phòng phù hợp</h3>
-    <p className="text-stone-500 text-sm max-w-sm mb-6">
-      Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm để xem nhiều kết quả hơn.
-    </p>
-    <button
-      onClick={onReset}
-      className="bg-gold-600 hover:bg-gold-700 text-white font-bold px-6 py-2.5 rounded-xl transition-all shadow hover:shadow-md active:scale-95"
-    >
-      Xóa Bộ Lọc
-    </button>
-    <Link to="/" className="mt-3 text-sm text-stone-400 hover:text-stone-600 underline underline-offset-2">
-      Quay về trang chủ
-    </Link>
-  </div>
-);
 
 export default SearchPage;
