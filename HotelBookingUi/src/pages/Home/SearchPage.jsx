@@ -115,7 +115,7 @@ const SearchPage = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalResults, setTotalResults] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // mobile sidebar
+
 
   // Filters state
   const [filters, setFilters] = useState({
@@ -363,19 +363,6 @@ const SearchPage = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Mobile filter toggle */}
-            <button
-              id="mobile-filter-btn"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden flex items-center gap-2 border border-stone-200 bg-white text-stone-700 text-sm font-semibold px-4 py-2 rounded-xl shadow-sm"
-            >
-              🎛️ Lọc
-              {activeFilterCount > 0 && (
-                <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
 
             {/* Sort dropdown */}
             <div className="flex items-center gap-2">
@@ -435,40 +422,12 @@ const SearchPage = () => {
         {/* ── Main grid: sidebar + results ── */}
         <div className="flex gap-6">
 
-          {/* Sidebar – desktop */}
-          <div className="hidden lg:block w-64 shrink-0">
+          {/* Sidebar */}
+          <div className="w-64 shrink-0">
             <div className="sticky top-36">
               <FilterPanel />
             </div>
           </div>
-
-          {/* Mobile sidebar overlay */}
-          {sidebarOpen && (
-            <div className="lg:hidden fixed inset-0 z-50 flex">
-              <div
-                className="flex-1 bg-black/40"
-                onClick={() => setSidebarOpen(false)}
-              />
-              <div className="w-72 bg-stone-50 h-full overflow-y-auto p-4 shadow-2xl">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-bold text-stone-900">Bộ Lọc</h2>
-                  <button
-                    onClick={() => setSidebarOpen(false)}
-                    className="text-stone-400 hover:text-stone-700 text-2xl leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-                <FilterPanel />
-                <button
-                  onClick={() => setSidebarOpen(false)}
-                  className="w-full mt-4 bg-amber-600 text-white font-bold py-3 rounded-xl"
-                >
-                  Áp Dụng Bộ Lọc ({totalResults} phòng)
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Results grid */}
           <div className="flex-1 min-w-0">
