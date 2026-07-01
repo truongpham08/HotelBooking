@@ -1,4 +1,4 @@
-﻿﻿import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 
 // src/pages/Auth/RegisterPage.jsx - quân
 // TODO: Form đăng ký (họ tên, email, SĐT, mật khẩu)
@@ -6,6 +6,7 @@ const RegisterPage = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
+    address: '',
     phone: '',
     password: '',
     confirmPassword: '',
@@ -23,7 +24,7 @@ const RegisterPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
-    
+
     if (formData.password !== formData.confirmPassword) {
       setError('Mật khẩu xác nhận không khớp!');
       return;
@@ -72,6 +73,23 @@ const RegisterPage = () => {
                   type="email"
                   required
                   value={formData.email}
+                  onChange={handleChange}
+                  className="appearance-none block w-full px-3 py-2 border border-stone-200 rounded-xl shadow-sm placeholder-stone-400 focus:outline-none focus:ring-gold-400 focus:border-gold-400 sm:text-sm transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium text-stone-700">
+                Địa chỉ
+              </label>
+              <div className="mt-1">
+                <input
+                  id="address"
+                  name="address"
+                  type="text"
+                  required
+                  value={formData.address}
                   onChange={handleChange}
                   className="appearance-none block w-full px-3 py-2 border border-stone-200 rounded-xl shadow-sm placeholder-stone-400 focus:outline-none focus:ring-gold-400 focus:border-gold-400 sm:text-sm transition-colors"
                 />
@@ -172,7 +190,7 @@ const RegisterPage = () => {
               </button>
             </div>
           </form>
-          
+
           <div className="mt-6 text-center text-sm">
             <span className="text-stone-500">Đã có tài khoản? </span>
             <a href="/login" className="font-medium text-gold-600 hover:text-gold-700">

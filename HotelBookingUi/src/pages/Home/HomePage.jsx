@@ -51,6 +51,17 @@ const MOCK_FEATURED_ROOMS = [
     amenities: ['WiFi', '2 Giường đôi', 'Điều hòa', 'Tủ lạnh'],
     available: true,
   },
+  {
+    id: 5,
+    name: 'Phòng Deluxe Gia Đình',
+    roomType: 'DELUXE',
+    pricePerNight: 1100000,
+    capacity: 4,
+    area: 50,
+    image: '/room-deluxe.png',
+    amenities: ['WiFi', '2 Giường đôi', 'Điều hòa', 'Tủ lạnh'],
+    available: true,
+  },
 ];
 
 const AMENITIES_ICONS = [
