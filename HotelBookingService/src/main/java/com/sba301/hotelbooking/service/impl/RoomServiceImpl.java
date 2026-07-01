@@ -13,9 +13,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sba301.hotelbooking.dto.PageResponse;
-import com.sba301.hotelbooking.dto.RoomResponse;
-import com.sba301.hotelbooking.dto.RoomTypeResponse;
+import com.sba301.hotelbooking.dto.response.PageResponse;
+import com.sba301.hotelbooking.dto.response.RoomResponse;
+import com.sba301.hotelbooking.dto.response.RoomTypeResponse;
 import com.sba301.hotelbooking.entity.Room;
 import com.sba301.hotelbooking.enums.RoomType;
 import com.sba301.hotelbooking.repository.RoomRepository;

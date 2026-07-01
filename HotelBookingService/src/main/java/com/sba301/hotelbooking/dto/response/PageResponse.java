@@ -1,4 +1,4 @@
-package com.sba301.hotelbooking.dto;
+package com.sba301.hotelbooking.dto.response;
 
 import java.util.List;
 
