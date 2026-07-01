@@ -6,64 +6,6 @@ import RoomCard from '../../components/home/RoomCard';
 import roomApi from '../../services/api/roomApi';
 
 
-const MOCK_FEATURED_ROOMS = [
-  {
-    id: 1,
-    name: 'Phòng Deluxe View Biển',
-    roomType: 'DELUXE',
-    pricePerNight: 850000,
-    capacity: 2,
-    area: 35,
-    image: '/room-deluxe.png',
-    amenities: ['WiFi', 'Điều hòa', 'TV', 'Ban công'],
-    available: true,
-  },
-  {
-    id: 2,
-    name: 'Phòng Suite Gia Đình',
-    roomType: 'SUITE',
-    pricePerNight: 1500000,
-    capacity: 4,
-    area: 65,
-    image: '/room-suite.png',
-    amenities: ['WiFi', '2 Phòng ngủ', 'Phòng khách', 'Bếp nhỏ'],
-    available: true,
-  },
-  {
-    id: 3,
-    name: 'Phòng Standard Tiêu Chuẩn',
-    roomType: 'STANDARD',
-    pricePerNight: 450000,
-    capacity: 2,
-    area: 25,
-    image: '/room-standard.png',
-    amenities: ['WiFi', 'TV', 'Điều hòa'],
-    available: true,
-  },
-  {
-    id: 4,
-    name: 'Phòng Deluxe Gia Đình',
-    roomType: 'DELUXE',
-    pricePerNight: 1100000,
-    capacity: 4,
-    area: 50,
-    image: '/room-deluxe.png',
-    amenities: ['WiFi', '2 Giường đôi', 'Điều hòa', 'Tủ lạnh'],
-    available: true,
-  },
-  {
-    id: 5,
-    name: 'Phòng Deluxe Gia Đình',
-    roomType: 'DELUXE',
-    pricePerNight: 1100000,
-    capacity: 4,
-    area: 50,
-    image: '/room-deluxe.png',
-    amenities: ['WiFi', '2 Giường đôi', 'Điều hòa', 'Tủ lạnh'],
-    available: true,
-  },
-];
-
 const AMENITIES_ICONS = [
   { icon: '🏊', label: 'Hồ bơi' },
   { icon: '🍽️', label: 'Nhà hàng' },
@@ -101,15 +43,18 @@ const TESTIMONIALS = [
 const HomePage = () => {
   const [featuredRooms, setFeaturedRooms] = useState([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
+  const [featuredRoomsError, setFeaturedRoomsError] = useState('');
 
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
+        setFeaturedRoomsError('');
         const data = await roomApi.getFeaturedRooms();
         const rooms = Array.isArray(data) ? data : (data?.content || data?.data || []);
-        setFeaturedRooms(rooms.length > 0 ? rooms : MOCK_FEATURED_ROOMS);
+        setFeaturedRooms(rooms);
       } catch {
-        setFeaturedRooms(MOCK_FEATURED_ROOMS);
+        setFeaturedRooms([]);
+        setFeaturedRoomsError('Khong the tai phong noi bat. Hay kiem tra backend va thu lai.');
       } finally {
         setLoadingRooms(false);
       }
@@ -204,6 +149,10 @@ const HomePage = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : featuredRoomsError ? (
+            <div className="bg-red-50 border border-red-100 text-red-700 rounded-xl px-5 py-4 text-sm text-center">
+              {featuredRoomsError}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -353,3 +302,7 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
+
+
+

@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Khởi tạo instance của axios
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api', // URL API backend mặc định
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/hotel-booking/api', // URL API backend mặc định
   headers: {
     'Content-Type': 'application/json',
   },
@@ -50,3 +50,4 @@ axiosClient.interceptors.response.use(
 );
 
 export default axiosClient;
+
