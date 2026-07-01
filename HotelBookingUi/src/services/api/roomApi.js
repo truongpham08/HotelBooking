@@ -24,9 +24,10 @@ const roomApi = {
   },
 
   getRoomTypes: () => {
-    return axiosClient.get('/room-types');
+    return axiosClient.get('/rooms/types');
   },
 };
 
 export default roomApi;
+
 

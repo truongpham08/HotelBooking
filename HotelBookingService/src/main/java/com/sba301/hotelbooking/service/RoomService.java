@@ -3,9 +3,9 @@ package com.sba301.hotelbooking.service;
 import java.math.BigDecimal;
 import java.util.List;
 
-import com.sba301.hotelbooking.dto.PageResponse;
-import com.sba301.hotelbooking.dto.RoomResponse;
-import com.sba301.hotelbooking.dto.RoomTypeResponse;
+import com.sba301.hotelbooking.dto.response.PageResponse;
+import com.sba301.hotelbooking.dto.response.RoomResponse;
+import com.sba301.hotelbooking.dto.response.RoomTypeResponse;
 import com.sba301.hotelbooking.enums.RoomType;
 
 public interface RoomService {
