@@ -5,104 +5,8 @@ import SearchBar from '../../components/home/SearchBar';
 import RoomCard from '../../components/home/RoomCard';
 import roomApi from '../../services/api/roomApi';
 
-// ─── Mock data fallback ───────────────────────────────────────────────────────
-const MOCK_ROOMS = [
-  {
-    id: 1,
-    name: 'Grand Deluxe Ocean View',
-    roomType: 'DELUXE',
-    pricePerNight: 2500000,
-    capacity: 2,
-    area: 45,
-    image: '/room-deluxe.png',
-    amenities: ['WiFi', 'Minibar', 'Bồn tắm', 'Ban công'],
-    available: true,
-  },
-  {
-    id: 2,
-    name: 'Presidential Suite',
-    roomType: 'SUITE',
-    pricePerNight: 8500000,
-    capacity: 4,
-    area: 120,
-    image: '/room-suite.png',
-    amenities: ['WiFi', 'Bể bơi riêng', 'Butler', 'Phòng khách', 'Bếp'],
-    available: true,
-  },
-  {
-    id: 3,
-    name: 'Superior Comfort Room',
-    roomType: 'STANDARD',
-    pricePerNight: 1200000,
-    capacity: 2,
-    area: 30,
-    image: '/room-standard.png',
-    amenities: ['WiFi', 'TV 55"', 'Điều hòa'],
-    available: true,
-  },
-  {
-    id: 4,
-    name: 'Family Deluxe Suite',
-    roomType: 'DELUXE',
-    pricePerNight: 3800000,
-    capacity: 5,
-    area: 75,
-    image: '/room-deluxe.png',
-    amenities: ['WiFi', '2 Phòng ngủ', 'Bếp nhỏ', 'Giường phụ'],
-    available: true,
-  },
-  {
-    id: 5,
-    name: 'Classic Standard Room',
-    roomType: 'STANDARD',
-    pricePerNight: 950000,
-    capacity: 1,
-    area: 25,
-    image: '/room-standard.png',
-    amenities: ['WiFi', 'Điều hòa', 'Tủ lạnh nhỏ'],
-    available: false,
-  },
-  {
-    id: 6,
-    name: 'Honeymoon Ocean Suite',
-    roomType: 'SUITE',
-    pricePerNight: 6200000,
-    capacity: 2,
-    area: 90,
-    image: '/room-suite.png',
-    amenities: ['WiFi', 'Bồn tắm ngoài trời', 'Rượu vang', 'Hoa tươi'],
-    available: true,
-  },
-  {
-    id: 7,
-    name: 'Executive Business Room',
-    roomType: 'DELUXE',
-    pricePerNight: 2200000,
-    capacity: 2,
-    area: 40,
-    image: '/room-deluxe.png',
-    amenities: ['WiFi tốc độ cao', 'Bàn làm việc', 'In ấn', 'Minibar'],
-    available: true,
-  },
-  {
-    id: 8,
-    name: 'Presidential Grand Suite',
-    roomType: 'PRESIDENTIAL',
-    pricePerNight: 15000000,
-    capacity: 6,
-    area: 250,
-    image: '/room-suite.png',
-    amenities: ['Butler riêng', 'Bể bơi', 'Phòng tập gym', 'Bếp trưởng'],
-    available: true,
-  },
-];
-
-const ROOM_TYPES = [
-  { value: '', label: 'Tất cả loại phòng' },
-  { value: 'STANDARD', label: 'Standard' },
-  { value: 'DELUXE', label: 'Deluxe' },
-  { value: 'SUITE', label: 'Suite' },
-  { value: 'PRESIDENTIAL', label: 'Presidential' },
+const DEFAULT_ROOM_TYPES = [
+  { value: '', label: 'Tat ca loai phong' },
 ];
 
 const SORT_OPTIONS = [
@@ -195,67 +99,64 @@ const EmptyState = ({ onReset }) => (
   </div>
 );
 
+const ErrorState = ({ message, onRetry }) => (
+  <div className="flex flex-col items-center justify-center py-20 text-center">
+    <div className="text-6xl mb-4">!</div>
+    <h3 className="text-xl font-bold text-stone-800 mb-2">Khong the tai danh sach phong</h3>
+    <p className="text-stone-500 text-sm max-w-sm mb-6">
+      {message || 'Vui long kiem tra backend va thu lai.'}
+    </p>
+    <button
+      onClick={onRetry}
+      className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-2.5 rounded-xl shadow"
+    >
+      Thu Lai
+    </button>
+  </div>
+);
 // ─── Main SearchPage ──────────────────────────────────────────────────────────
 const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // ── State ──────────────────────────────────────────────────────────────────
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalResults, setTotalResults] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(6);
+  const [roomTypes, setRoomTypes] = useState(DEFAULT_ROOM_TYPES);
+  const [error, setError] = useState('');
 
-
-  // Filters state
   const [filters, setFilters] = useState({
     keyword: searchParams.get('keyword') || '',
     checkIn: searchParams.get('checkIn') || '',
     checkOut: searchParams.get('checkOut') || '',
     capacity: searchParams.get('capacity') || '',
     roomType: searchParams.get('roomType') || '',
-    priceRange: 0, // index in PRICE_RANGES
+    priceRange: 0,
     sortBy: 'price_asc',
     availableOnly: false,
   });
-
-  // ── Apply client-side filters on mock data ────────────────────────────────
-  const applyMockFilters = (data, f) => {
-    let result = [...data];
-    if (f.keyword) {
-      const kw = f.keyword.toLowerCase();
-      result = result.filter(
-        (r) => r.name.toLowerCase().includes(kw) || r.roomType.toLowerCase().includes(kw)
-      );
-    }
-    if (f.roomType) result = result.filter((r) => r.roomType === f.roomType);
-    if (f.capacity) result = result.filter((r) => r.capacity >= parseInt(f.capacity));
-    const pr = PRICE_RANGES[f.priceRange];
-    result = result.filter((r) => r.pricePerNight >= pr.min && r.pricePerNight <= pr.max);
-    if (f.availableOnly) result = result.filter((r) => r.available);
-    return result;
-  };
-
-  const applySortAndFilter = (data, f) => {
-    const sorted = [...data];
-    switch (f.sortBy) {
-      case 'price_asc': return sorted.sort((a, b) => a.pricePerNight - b.pricePerNight);
-      case 'price_desc': return sorted.sort((a, b) => b.pricePerNight - a.pricePerNight);
-      case 'name_asc': return sorted.sort((a, b) => a.name.localeCompare(b.name));
-      case 'capacity_asc': return sorted.sort((a, b) => a.capacity - b.capacity);
-      default: return sorted;
-    }
-  };
 
   // ── Fetch rooms ────────────────────────────────────────────────────────────
   const fetchRooms = useCallback(async () => {
     await Promise.resolve();
     setLoading(true);
+    setError('');
     try {
+      const priceRange = PRICE_RANGES[filters.priceRange];
       const params = {
         keyword: filters.keyword || undefined,
         checkIn: filters.checkIn || undefined,
         checkOut: filters.checkOut || undefined,
         capacity: filters.capacity || undefined,
         roomType: filters.roomType || undefined,
+        available: filters.availableOnly ? true : undefined,
+        minPrice: priceRange?.min > 0 ? priceRange.min : undefined,
+        maxPrice: Number.isFinite(priceRange?.max) ? priceRange.max : undefined,
+        sortBy: filters.sortBy,
+        page: currentPage,
+        size: pageSize,
       };
       const data = await roomApi.getRooms(params);
       const list = Array.isArray(data)
@@ -264,22 +165,36 @@ const SearchPage = () => {
           ? data.content
           : Array.isArray(data?.data)
             ? data.data
-            : null;
-      const source = list ?? MOCK_ROOMS;
-      let result = applyMockFilters(source, filters);
-      result = applySortAndFilter(result, filters);
-      setRooms(result);
-      setTotalResults(result.length);
+            : [];
+      setRooms(list);
+      setTotalResults(Number.isFinite(data?.totalElements) ? data.totalElements : list.length);
+      setTotalPages(Number.isFinite(data?.totalPages) ? data.totalPages : 1);
+      setCurrentPage(Number.isFinite(data?.page) ? data.page : currentPage);
     } catch {
-      let result = applyMockFilters(MOCK_ROOMS, filters);
-      result = applySortAndFilter(result, filters);
-      setRooms(result);
-      setTotalResults(result.length);
+      setRooms([]);
+      setTotalResults(0);
+      setError('Khong ket noi duoc API phong. Hay dam bao backend dang chay o cong 8080.');
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, currentPage, pageSize]);
 
+  useEffect(() => {
+    const fetchRoomTypes = async () => {
+      try {
+        const data = await roomApi.getRoomTypes();
+        const types = Array.isArray(data) ? data : [];
+        setRoomTypes([
+          DEFAULT_ROOM_TYPES[0],
+          ...types.filter((type) => type?.value && type?.label),
+        ]);
+      } catch {
+        setRoomTypes(DEFAULT_ROOM_TYPES);
+      }
+    };
+
+    fetchRoomTypes();
+  }, []);
   useEffect(() => {
 
     fetchRooms();
@@ -287,10 +202,12 @@ const SearchPage = () => {
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const updateFilter = (key, value) => {
+    setCurrentPage(0);
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const resetFilters = () => {
+    setCurrentPage(0);
     setFilters({
       keyword: '',
       checkIn: '',
@@ -338,7 +255,7 @@ const SearchPage = () => {
       {/* Loại phòng */}
       <FilterSection title="Loại Phòng">
         <div className="space-y-1">
-          {ROOM_TYPES.map((t) => (
+          {roomTypes.map((t) => (
             <label
               key={t.value}
               htmlFor={`type-${t.value}`}
@@ -483,7 +400,7 @@ const SearchPage = () => {
             )}
             {filters.roomType && (
               <FilterChip
-                label={`Loại: ${ROOM_TYPES.find((t) => t.value === filters.roomType)?.label}`}
+                label={`Loại: ${roomTypes.find((t) => t.value === filters.roomType)?.label}`}
                 onRemove={() => updateFilter('roomType', '')}
               />
             )}
@@ -526,6 +443,8 @@ const SearchPage = () => {
                   <SkeletonCard key={i} />
                 ))}
               </div>
+            ) : error ? (
+              <ErrorState message={error} onRetry={fetchRooms} />
             ) : rooms.length === 0 ? (
               <EmptyState onReset={resetFilters} />
             ) : (
@@ -536,25 +455,38 @@ const SearchPage = () => {
                   ))}
                 </div>
 
-                {/* Pagination placeholder */}
-                <div className="flex justify-center mt-10">
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3].map((p) => (
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-10">
+                    <div className="flex items-center gap-1">
                       <button
-                        key={p}
-                        className={`w-9 h-9 rounded-lg text-sm font-semibold border ${p === 1
-                          ? 'bg-amber-600 text-white border-amber-600'
-                          : 'bg-white border-stone-200 text-stone-600 hover:border-amber-400 hover:text-amber-600'
-                          }`}
+                        onClick={() => setCurrentPage((page) => Math.max(page - 1, 0))}
+                        disabled={currentPage === 0}
+                        className="w-9 h-9 rounded-lg text-sm font-semibold bg-white border border-stone-200 text-stone-500 hover:border-amber-400 disabled:opacity-40 disabled:hover:border-stone-200"
                       >
-                        {p}
+                        &lt;
                       </button>
-                    ))}
-                    <button className="w-9 h-9 rounded-lg text-sm font-semibold bg-white border border-stone-200 text-stone-500 hover:border-amber-400">
-                      →
-                    </button>
+                      {Array.from({ length: totalPages }, (_, index) => index).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-9 h-9 rounded-lg text-sm font-semibold border ${page === currentPage
+                            ? 'bg-amber-600 text-white border-amber-600'
+                            : 'bg-white border-stone-200 text-stone-600 hover:border-amber-400 hover:text-amber-600'
+                            }`}
+                        >
+                          {page + 1}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages - 1))}
+                        disabled={currentPage >= totalPages - 1}
+                        className="w-9 h-9 rounded-lg text-sm font-semibold bg-white border border-stone-200 text-stone-500 hover:border-amber-400 disabled:opacity-40 disabled:hover:border-stone-200"
+                      >
+                        &gt;
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </>
             )}
           </div>
@@ -565,3 +497,8 @@ const SearchPage = () => {
 };
 
 export default SearchPage;
+
+
+
+
+

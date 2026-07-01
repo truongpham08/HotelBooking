@@ -20,8 +20,13 @@ const roomApi = {
 
 
   getFeaturedRooms: () => {
-    return axiosClient.get('/rooms', { params: { featured: true, size: 4 } });
+    return axiosClient.get('/rooms', { params: { featured: true, page: 0, size: 4 } });
+  },
+
+  getRoomTypes: () => {
+    return axiosClient.get('/room-types');
   },
 };
 
 export default roomApi;
+
