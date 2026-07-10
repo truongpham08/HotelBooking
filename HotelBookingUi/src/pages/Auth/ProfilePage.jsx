@@ -1,14 +1,47 @@
-﻿import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
+import authApi from '../../../services/api/authApi';
 
 // src/pages/Auth/ProfilePage.jsx - quân
-// TODO: Thông tin cá nhân + lịch sử đặt phòng
 const ProfilePage = () => {
-  // Mock data mô phỏng thông tin cá nhân và lịch sử
-  const userInfo = {
-    fullName: 'Nguyễn Văn A',
-    email: 'nguyenvana@example.com',
-    phone: '0123456789',
-    memberSince: 'Tháng 1, 2024'
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    
+    const fetchProfile = async () => {
+      try {
+        const data = await authApi.getProfile();
+        setProfile(data);
+      } catch (err) {
+        console.error('Lỗi khi lấy thông tin user', err);
+        // Fallback to user from context if API fails
+        setProfile(user);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user, navigate]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const userInfo = profile || {
+    fullName: user?.fullName || 'N/A',
+    email: user?.email || 'N/A',
+    phone: user?.phone || 'N/A',
+    memberSince: 'N/A'
   };
 
   const bookingHistory = [
@@ -106,7 +139,10 @@ const ProfilePage = () => {
 
         {/* Section: Đăng xuất */}
         <div className="flex justify-end">
-          <button className="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 px-6 rounded-xl border border-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors shadow-sm">
+          <button 
+            onClick={handleLogout}
+            className="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 px-6 rounded-xl border border-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors shadow-sm"
+          >
             Đăng xuất
           </button>
         </div>

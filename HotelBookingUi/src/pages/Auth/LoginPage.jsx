@@ -1,15 +1,32 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import authApi from '../../../services/api/authApi';
+import { useAuth } from '../../../context/AuthContext';
 
 // src/pages/Auth/LoginPage.jsx - quân
-// TODO: Form đăng nhập (email, password) + validate + gọi API
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Validate và gọi API
-    console.log('Login data:', { email, password });
+    setError('');
+    setLoading(true);
+    
+    try {
+      const response = await authApi.login({ email, password });
+      // Giả sử API trả về đối tượng có chứa token và user info
+      login(response);
+      navigate('/'); // Chuyển hướng về trang chủ
+    } catch (err) {
+      setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,12 +82,15 @@ const LoginPage = () => {
               </div>
             </div>
 
+            {error && <div className="text-sm font-medium text-red-600">{error}</div>}
+
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-gold-600 hover:bg-gold-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 transition-colors"
+                disabled={loading}
+                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-gold-600 hover:bg-gold-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 transition-colors disabled:opacity-50"
               >
-                Đăng nhập
+                {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
               </button>
             </div>
           </form>
