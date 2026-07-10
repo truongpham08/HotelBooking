@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import authApi from '../../../services/api/authApi';
+import { useAuth } from '../../context/AuthContext';
+import authApi from '../../services/api/authApi';
 
 // src/pages/Auth/ProfilePage.jsx - quân
 const ProfilePage = () => {

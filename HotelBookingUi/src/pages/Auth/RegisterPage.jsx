@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import authApi from '../../../services/api/authApi';
+import authApi from '../../services/api/authApi';
 
 // src/pages/Auth/RegisterPage.jsx - quân
 const RegisterPage = () => {

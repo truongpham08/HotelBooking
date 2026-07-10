@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import authApi from '../../../services/api/authApi';
-import { useAuth } from '../../../context/AuthContext';
+import authApi from '../../services/api/authApi';
+import { useAuth } from '../../context/AuthContext';
 
 // src/pages/Auth/LoginPage.jsx - quân
 const LoginPage = () => {
