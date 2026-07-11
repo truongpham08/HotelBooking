@@ -21,7 +21,7 @@ public class AdminSeeder implements CommandLineRunner {
                     .fullName("Quản trị viên")
                     .email("admin@hotel.com")
                     .password(passwordEncoder.encode("admin123"))
-                    .phone("0987654321")
+                    .phone("0000000000")
                     .address("Hà Nội")
                     .role("ADMIN")
                     .build();
