@@ -59,6 +59,38 @@ public class AuthService {
         return mapToAuthResponse(user, jwtToken);
     }
     
+    public AuthResponse getProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return mapToAuthResponse(user, null); // no token returned for profile view
+    }
+    
+    public AuthResponse updateProfile(String email, com.sba301.hotelbooking.dto.request.UpdateProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+                
+        user.setFullName(request.getFullName());
+        user.setPhone(request.getPhone());
+        user.setAddress(request.getAddress());
+        
+        user = userRepository.save(user);
+        return mapToAuthResponse(user, null);
+    }
+    
+    public void changePassword(String email, com.sba301.hotelbooking.dto.request.ChangePasswordRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+                
+        // Kiểm tra mật khẩu cũ
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new RuntimeException("Mật khẩu cũ không chính xác");
+        }
+        
+        // Cập nhật mật khẩu mới (đã mã hóa)
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+    
     private AuthResponse mapToAuthResponse(User user, String token) {
         return AuthResponse.builder()
                 .id(user.getId())

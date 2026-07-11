@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Nationalized;
 
 import java.time.LocalDateTime;
 
@@ -20,6 +21,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @Nationalized
     @Column(nullable = false)
     private String fullName;
     
@@ -31,6 +33,7 @@ public class User {
     
     private String phone;
     
+    @Nationalized
     private String address;
     
     private String role; // e.g., "USER", "ADMIN"

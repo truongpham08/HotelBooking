@@ -28,13 +28,24 @@ public class AuthController {
     
     @GetMapping("/profile")
     public ResponseEntity<AuthResponse> getProfile() {
-        // Return dummy profile data or parse token
-        return ResponseEntity.ok(AuthResponse.builder()
-                .id(1L)
-                .fullName("User Profile")
-                .email("user@example.com")
-                .phone("0123456789")
-                .role("USER")
-                .build());
+        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(authService.getProfile(email));
+    }
+    
+    @PutMapping("/profile")
+    public ResponseEntity<AuthResponse> updateProfile(@RequestBody com.sba301.hotelbooking.dto.request.UpdateProfileRequest request) {
+        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(authService.updateProfile(email, request));
+    }
+    
+    @PutMapping("/password")
+    public ResponseEntity<?> changePassword(@RequestBody com.sba301.hotelbooking.dto.request.ChangePasswordRequest request) {
+        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        try {
+            authService.changePassword(email, request);
+            return ResponseEntity.ok().body("{\"message\": \"Đổi mật khẩu thành công\"}");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("{\"message\": \"" + e.getMessage() + "\"}");
+        }
     }
 }
