@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.sba301.hotelbooking.dto.response.PageResponse;
 import com.sba301.hotelbooking.dto.response.RoomResponse;
 import com.sba301.hotelbooking.dto.response.RoomTypeResponse;
@@ -52,6 +51,7 @@ public class RoomController {
     public RoomResponse getRoomById(@PathVariable Long id) {
         return roomService.getRoomById(id);
     }
+
 }
 
 

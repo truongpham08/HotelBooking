@@ -1,7 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import roomApi from '../../services/api/roomApi';
-import { MOCK_ROOMS } from '../../services/mockRooms';
 
 const formatPrice = (price) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -15,9 +14,6 @@ const formatDate = (value) => {
     year: 'numeric',
   });
 };
-
-const getMockRoom = (roomId) =>
-  MOCK_ROOMS.find((room) => String(room.id) === String(roomId));
 
 const getNights = (checkIn, checkOut) => {
   if (!checkIn || !checkOut) return 0;
@@ -59,20 +55,10 @@ const RoomDetailPage = () => {
         if (response && response.id) {
           setRoom(response);
         } else {
-          const fallback = getMockRoom(id);
-          if (fallback) {
-            setRoom(fallback);
-          } else {
-            setError('Không tìm thấy thông tin phòng.');
-          }
+          setError('Không tìm thấy thông tin phòng.');
         }
-      } catch (err) {
-        const fallback = getMockRoom(id);
-        if (fallback) {
-          setRoom(fallback);
-        } else {
-          setError('Không thể tải dữ liệu phòng. Vui lòng thử lại sau.');
-        }
+      } catch {
+        setError('Không thể tải dữ liệu phòng. Vui lòng thử lại sau.');
       } finally {
         setLoading(false);
       }
