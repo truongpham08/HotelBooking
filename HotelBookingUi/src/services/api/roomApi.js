@@ -18,6 +18,18 @@ const roomApi = {
     return axiosClient.get(`/rooms/${id}`);
   },
 
+  createRoom: (data) => {
+    return axiosClient.post('/rooms', data);
+  },
+
+  updateRoom: (id, data) => {
+    return axiosClient.put(`/rooms/${id}`, data);
+  },
+
+  deleteRoom: (id) => {
+    return axiosClient.delete(`/rooms/${id}`);
+  },
+
 
   getFeaturedRooms: () => {
     return axiosClient.get('/rooms', { params: { featured: true, page: 0, size: 4 } });
