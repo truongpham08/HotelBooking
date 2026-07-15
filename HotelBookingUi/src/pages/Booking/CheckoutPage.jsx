@@ -1,7 +1,8 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import roomApi from '../../services/api/roomApi';
+import bookingApi from '../../services/api/bookingApi';
 import { MOCK_ROOMS } from '../../services/mockRooms';
 
 const formatPrice = (price) =>
@@ -106,7 +107,7 @@ const CheckoutPage = () => {
     setReservation((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!room) return;
     if (!reservation.checkIn || !reservation.checkOut || nights <= 0) {
@@ -140,8 +141,19 @@ const CheckoutPage = () => {
       createdAt: new Date().toISOString(),
     };
 
-    sessionStorage.setItem('hotel_booking_confirmation', JSON.stringify(booking));
-    navigate(`/success?bookingId=${booking.id}`);
+    try {
+      setLoading(true);
+      const res = await bookingApi.createBooking(booking);
+      if (res.success) {
+        navigate(`/success?bookingId=${res.data.id}`);
+      } else {
+        setError(res.message || 'Có lỗi xảy ra khi đặt phòng');
+      }
+    } catch (e) {
+      setError(e.response?.data?.message || 'Không thể kết nối đến máy chủ');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {

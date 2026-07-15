@@ -1,5 +1,6 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import bookingApi from '../../services/api/bookingApi';
 
 const formatPrice = (price) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -9,19 +10,35 @@ const SuccessPage = () => {
   const navigate = useNavigate();
   const bookingId = searchParams.get('bookingId');
   const [booking, setBooking] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem('hotel_booking_confirmation');
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed?.id === bookingId) {
-        setBooking(parsed);
+    const fetchBooking = async () => {
+      if (!bookingId) {
+        setLoading(false);
+        return;
       }
-    } catch {
-      // ignore
-    }
+      try {
+        const res = await bookingApi.getBookingById(bookingId);
+        if (res.success && res.data) {
+          setBooking(res.data);
+        }
+      } catch (error) {
+        console.error('Error fetching booking:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBooking();
   }, [bookingId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-6">
+        <div className="text-stone-500 animate-pulse font-semibold">Đang tải thông tin đặt phòng...</div>
+      </div>
+    );
+  }
 
   if (!booking) {
     return (
