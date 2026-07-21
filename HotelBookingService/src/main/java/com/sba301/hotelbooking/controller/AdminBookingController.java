@@ -1,4 +1,4 @@
-﻿package com.sba301.hotelbooking.controller;
+package com.sba301.hotelbooking.controller;
 
 import com.sba301.hotelbooking.dto.request.BookingStatusRequest;
 import com.sba301.hotelbooking.dto.response.BookingResponse;

@@ -1,4 +1,4 @@
-﻿package com.sba301.hotelbooking;
+package com.sba301.hotelbooking;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
