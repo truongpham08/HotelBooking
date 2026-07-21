@@ -13,7 +13,6 @@ import com.sba301.hotelbooking.enums.BookingStatus;
 @Data
 public class Booking {
     @Id
-    @Column(length = 50)
     private String id;
 
     @Column(name = "user_id")
@@ -32,6 +31,7 @@ public class Booking {
     private BigDecimal pricePerNight;
     private BigDecimal subTotal;
     private BigDecimal serviceFee;
+    @Column(columnDefinition = "nvarchar(255)")
     private String customerFullName;
     private String customerEmail;
     private String customerPhone;

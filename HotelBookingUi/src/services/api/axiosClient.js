@@ -13,7 +13,7 @@ const axiosClient = axios.create({
 // Interceptor xử lý Request: tự động gắn Token JWT vào header nếu có
 axiosClient.interceptors.request.use(
   (config) => {
-    const userJson = localStorage.getItem('hotel_user');
+    const userJson = localStorage.getItem('hotel_user') || sessionStorage.getItem('hotel_user');
     if (userJson) {
       try {
         const user = JSON.parse(userJson);
@@ -43,6 +43,7 @@ axiosClient.interceptors.response.use(
     // Xử lý lỗi tự động (ví dụ: tự động logout nếu token hết hạn - lỗi 401)
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('hotel_user');
+      sessionStorage.removeItem('hotel_user');
       window.location.href = '/login';
     }
     return Promise.reject(error);

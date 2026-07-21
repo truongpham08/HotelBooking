@@ -18,6 +18,9 @@ const authApi = {
   },
   getMyBookings: () => {
     return axiosClient.get('/bookings/my-bookings');
+  },
+  forgotPassword: (data) => {
+    return axiosClient.post('/auth/forgot-password', data);
   }
 };
 

@@ -26,6 +26,25 @@ const ProfilePage = () => {
     newPassword: '',
     confirmPassword: ''
   });
+  
+  // Avatar state
+  const [avatarPreview, setAvatarPreview] = useState(() => {
+    return localStorage.getItem('user_avatar_' + (user?.email || ''));
+  });
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result);
+        if (user?.email) {
+          localStorage.setItem('user_avatar_' + user.email, reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -120,13 +139,31 @@ const ProfilePage = () => {
         {/* Section: Thông tin cá nhân */}
         <div className="bg-white shadow-md border border-stone-100 overflow-hidden sm:rounded-2xl">
           <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-            <div>
-              <h3 className="text-lg leading-6 font-bold text-stone-900">
-                Thông tin hồ sơ
-              </h3>
-              <p className="mt-1 max-w-2xl text-sm text-stone-500">
-                Chi tiết tài khoản của bạn.
-              </p>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <img
+                  src={avatarPreview || userInfo.avatar || "https://ui-avatars.com/api/?name=" + (userInfo.fullName || "User") + "&background=random"}
+                  alt="Avatar"
+                  className="h-16 w-16 rounded-full object-cover border border-stone-200"
+                />
+                {isEditing && (
+                  <label className="absolute bottom-0 right-0 bg-gold-600 rounded-full p-1.5 cursor-pointer hover:bg-gold-700 transition-colors shadow-sm">
+                    <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} />
+                  </label>
+                )}
+              </div>
+              <div>
+                <h3 className="text-lg leading-6 font-bold text-stone-900">
+                  Thông tin hồ sơ
+                </h3>
+                <p className="mt-1 max-w-2xl text-sm text-stone-500">
+                  Chi tiết tài khoản của bạn.
+                </p>
+              </div>
             </div>
             {!isEditing ? (
               <button 
@@ -272,20 +309,29 @@ const ProfilePage = () => {
                     <div className="flex items-center justify-between">
                       <div className="truncate">
                         <div className="flex text-sm">
-                          <p className="font-bold text-gold-600 truncate">{booking.hotelName}</p>
+                          <p className="font-bold text-gold-600 truncate">{booking.roomName || booking.hotelName || 'Phòng khách sạn'}</p>
                           <p className="ml-2 flex-shrink-0 font-normal text-stone-500">
                             Mã Đặt: #{booking.id}
                           </p>
                         </div>
                         <div className="mt-1 flex text-sm text-stone-500">
-                          {booking.checkIn} đến {booking.checkOut}
+                          {booking.checkInDate || booking.checkIn} đến {booking.checkOutDate || booking.checkOut}
                         </div>
                       </div>
                       <div className="ml-2 flex-shrink-0 flex flex-col items-end">
-                        <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${booking.status === 'Đã hoàn thành' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                          {booking.status}
+                        <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          booking.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
+                          booking.status === "APPROVED" ? "bg-green-100 text-green-800" :
+                          booking.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
+                          booking.status === "CANCELLED" ? "bg-red-100 text-red-800" :
+                          booking.status === 'Đã hoàn thành' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {booking.status === "PENDING" ? "Chờ xử lý" :
+                           booking.status === "APPROVED" ? "Đã duyệt" :
+                           booking.status === "COMPLETED" ? "Hoàn thành" :
+                           booking.status === "CANCELLED" ? "Đã hủy" : booking.status}
                         </p>
-                        <p className="mt-1 text-sm font-bold text-stone-900">{booking.totalPrice}</p>
+                        <p className="mt-1 text-sm font-bold text-stone-900">{booking.totalPrice ? booking.totalPrice.toLocaleString() : "0"} VNĐ</p>
                       </div>
                     </div>
                   </li>

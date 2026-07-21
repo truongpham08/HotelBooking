@@ -91,6 +91,13 @@ public class AuthService {
         userRepository.save(user);
     }
     
+    public void forgotPassword(String email) {
+        if (!userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Không tìm thấy tài khoản với email này");
+        }
+        // Giả lập gửi email khôi phục thành công
+    }
+    
     private AuthResponse mapToAuthResponse(User user, String token) {
         return AuthResponse.builder()
                 .id(user.getId())

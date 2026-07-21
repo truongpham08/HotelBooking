@@ -21,7 +21,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "nvarchar(255)")
     private String fullName;
     
     @Column(nullable = false, unique = true)
@@ -32,8 +32,10 @@ public class User {
     
     private String phone;
     
+    @Column(columnDefinition = "nvarchar(255)")
     private String address;
     
+    @Column(columnDefinition = "nvarchar(50)")
     private String role; // e.g., "USER", "ADMIN"
     
     @Column(updatable = false)

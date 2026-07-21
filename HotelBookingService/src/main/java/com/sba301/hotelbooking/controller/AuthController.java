@@ -48,4 +48,14 @@ public class AuthController {
             return ResponseEntity.badRequest().body("{\"message\": \"" + e.getMessage() + "\"}");
         }
     }
+    
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody java.util.Map<String, String> request) {
+        try {
+            authService.forgotPassword(request.get("email"));
+            return ResponseEntity.ok().body("{\"message\": \"Đã gửi mã khôi phục đến email của bạn.\"}");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("{\"message\": \"" + e.getMessage() + "\"}");
+        }
+    }
 }
