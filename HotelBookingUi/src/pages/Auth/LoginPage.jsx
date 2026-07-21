@@ -9,6 +9,8 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showForgotPasswordBtn, setShowForgotPasswordBtn] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -20,10 +22,34 @@ const LoginPage = () => {
     try {
       const response = await authApi.login({ email, password });
       // Giả sử API trả về đối tượng có chứa token và user info
+      // NOTE: In a real system, you'd pass rememberMe to login() to save in localStorage vs sessionStorage
       login(response);
-      navigate('/'); // Chuyển hướng về trang chủ
+      
+      if (response.role === 'ADMIN') {
+        navigate('/admin'); // Chuyển hướng thẳng vào Admin Dashboard
+      } else {
+        navigate('/'); // Chuyển hướng về trang chủ
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      setShowForgotPasswordBtn(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Vui lòng nhập email trước khi nhấn Quên mật khẩu.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await authApi.forgotPassword({ email });
+      alert(response.message || `Đã gửi mã khôi phục đến email: ${email}`);
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Không thể gửi mã khôi phục. Vui lòng kiểm tra lại email.');
     } finally {
       setLoading(false);
     }
@@ -75,10 +101,26 @@ const LoginPage = () => {
             </div>
 
             <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 text-gold-600 focus:ring-gold-500 border-stone-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-stone-900">
+                  Ghi nhớ đăng nhập
+                </label>
+              </div>
+
               <div className="text-sm">
-                <a href="#" className="font-medium text-gold-600 hover:text-gold-700">
-                  Quên mật khẩu?
-                </a>
+                {showForgotPasswordBtn && (
+                  <button type="button" onClick={handleForgotPassword} disabled={loading} className="font-medium text-gold-600 hover:text-gold-700">
+                    Quên mật khẩu?
+                  </button>
+                )}
               </div>
             </div>
 

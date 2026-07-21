@@ -5,26 +5,32 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('hotel_user');
+    const savedUser = localStorage.getItem('hotel_user') || sessionStorage.getItem('hotel_user');
     if (savedUser) {
       try {
         return JSON.parse(savedUser);
       } catch {
         localStorage.removeItem('hotel_user');
+        sessionStorage.removeItem('hotel_user');
       }
     }
     return null;
   });
   const [loading] = useState(false);
 
-  const login = (userData) => {
+  const login = (userData, rememberMe = false) => {
     setUser(userData);
-    localStorage.setItem('hotel_user', JSON.stringify(userData));
+    if (rememberMe) {
+      localStorage.setItem('hotel_user', JSON.stringify(userData));
+    } else {
+      sessionStorage.setItem('hotel_user', JSON.stringify(userData));
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('hotel_user');
+    sessionStorage.removeItem('hotel_user');
   };
 
   const value = {

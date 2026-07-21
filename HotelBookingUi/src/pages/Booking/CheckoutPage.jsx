@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import roomApi from '../../services/api/roomApi';
@@ -27,11 +27,12 @@ const CheckoutPage = () => {
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [bookingError, setBookingError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
-    fullName: user?.name || '',
+    fullName: user?.fullName || '',
     email: user?.email || '',
-    phone: '',
+    phone: user?.phone || '',
     paymentMethod: 'card',
     requests: '',
   });
@@ -118,6 +119,7 @@ const CheckoutPage = () => {
       },
       paymentMethod: form.paymentMethod,
       requests: form.requests,
+      status: form.paymentMethod === 'cash' ? 'APPROVED' : 'COMPLETED', // Auto-approve booking
     };
 
     setSubmitting(true);
@@ -130,7 +132,7 @@ const CheckoutPage = () => {
       sessionStorage.setItem('hotel_booking_confirmation', JSON.stringify(response.data));
       navigate(`/success?bookingId=${response.data.id}`);
     } catch (requestError) {
-      setError(requestError.response?.data?.message || requestError.message || 'Không thể tạo đơn đặt phòng. Vui lòng thử lại.');
+      setBookingError(requestError.response?.data?.message || requestError.message || 'Không thể tạo đơn đặt phòng. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }
@@ -152,6 +154,41 @@ const CheckoutPage = () => {
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (bookingError) {
+    return (
+      <main className="min-h-screen bg-stone-50 py-10 sm:py-16">
+        <div className="mx-auto max-w-2xl px-4">
+          <div className="rounded-[2rem] border border-stone-200 bg-white p-8 sm:p-12 shadow-sm">
+            <div className="text-center">
+              <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-red-100 text-3xl text-red-600 font-bold">
+                ✕
+              </div>
+              <h1 className="mt-6 text-3xl font-extrabold text-stone-900">Đặt phòng thất bại</h1>
+              <p className="mt-4 text-base text-stone-600 bg-red-50 p-4 rounded-2xl border border-red-100">
+                {bookingError}
+              </p>
+            </div>
+            
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row justify-center">
+              <button 
+                onClick={() => setBookingError(null)} 
+                className="flex-1 rounded-2xl border border-stone-200 px-6 py-4 text-center font-bold text-stone-700 hover:bg-stone-50 transition active:scale-[0.99]"
+              >
+                Thử lại
+              </button>
+              <Link 
+                to="/search" 
+                className="flex-1 rounded-2xl bg-gold-600 px-6 py-4 text-center font-bold text-white hover:bg-gold-700 transition active:scale-[0.99]"
+              >
+                Quay lại tìm phòng
+              </Link>
+            </div>
+          </div>
+        </div>
+      </main>
     );
   }
 
@@ -181,8 +218,8 @@ const CheckoutPage = () => {
                   <input
                     name="fullName"
                     value={form.fullName}
-                    onChange={handleFormChange}
-                    className="mt-2 w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm text-stone-900 outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-200"
+                    readOnly
+                    className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none cursor-not-allowed"
                     placeholder="Nguyễn Văn A"
                   />
                 </label>
@@ -192,8 +229,8 @@ const CheckoutPage = () => {
                     name="email"
                     type="email"
                     value={form.email}
-                    onChange={handleFormChange}
-                    className="mt-2 w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm text-stone-900 outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-200"
+                    readOnly
+                    className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none cursor-not-allowed"
                     placeholder="email@domain.com"
                   />
                 </label>
@@ -202,8 +239,8 @@ const CheckoutPage = () => {
                   <input
                     name="phone"
                     value={form.phone}
-                    onChange={handleFormChange}
-                    className="mt-2 w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm text-stone-900 outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-200"
+                    readOnly
+                    className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none cursor-not-allowed"
                     placeholder="09xx xxx xxx"
                   />
                 </label>

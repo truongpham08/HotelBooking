@@ -56,7 +56,7 @@ class BookingServiceImplTests {
 
         assertEquals(2, response.nights());
         assertEquals(new BigDecimal("2160000.00"), response.totalAmount());
-        assertEquals("PENDING", response.status());
+        assertEquals("APPROVED", response.status());
         assertEquals("Deluxe", response.roomName());
     }
 
@@ -79,6 +79,6 @@ class BookingServiceImplTests {
     private CreateBookingRequest request(LocalDate checkIn, LocalDate checkOut, int capacity) {
         return new CreateBookingRequest(10L, checkIn, checkOut, capacity,
                 new CreateBookingRequest.Customer("Test User", "test@example.com", "0900000000"),
-                "cash", null);
+                "cash", null, null);
     }
 }

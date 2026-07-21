@@ -65,7 +65,15 @@ public class BookingServiceImpl implements BookingService {
         booking.setCustomerPhone(request.customer().phone());
         booking.setPaymentMethod(request.paymentMethod());
         booking.setRequests(request.requests());
-        booking.setStatus(BookingStatus.PENDING);
+        BookingStatus status = BookingStatus.COMPLETED;
+        if (request.status() != null && !request.status().isBlank()) {
+            try {
+                status = BookingStatus.valueOf(request.status().toUpperCase());
+            } catch (IllegalArgumentException ignored) {}
+        } else if ("cash".equalsIgnoreCase(request.paymentMethod())) {
+            status = BookingStatus.APPROVED;
+        }
+        booking.setStatus(status);
         return BookingResponse.from(bookingRepository.save(booking), room);
     }
 

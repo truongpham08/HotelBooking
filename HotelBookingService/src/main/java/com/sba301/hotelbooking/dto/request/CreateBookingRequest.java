@@ -15,7 +15,8 @@ public record CreateBookingRequest(
         @NotNull @Min(1) Integer capacity,
         @NotNull @Valid Customer customer,
         @NotBlank String paymentMethod,
-        String requests
+        String requests,
+        String status
 ) {
     public record Customer(
             @NotBlank String fullName,

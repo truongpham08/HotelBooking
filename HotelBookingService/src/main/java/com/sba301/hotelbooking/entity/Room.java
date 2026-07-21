@@ -27,7 +27,7 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 120)
+    @Column(nullable = false, length = 120, columnDefinition = "nvarchar(120)")
     private String name;
 
     @Enumerated(EnumType.STRING)
@@ -47,7 +47,7 @@ public class Room {
 
     @ElementCollection
     @CollectionTable(name = "room_amenities", joinColumns = @JoinColumn(name = "room_id"))
-    @Column(name = "amenity", nullable = false, length = 100)
+    @Column(name = "amenity", nullable = false, length = 100, columnDefinition = "nvarchar(100)")
     private List<String> amenities = new ArrayList<>();
 
     @Column(nullable = false)
