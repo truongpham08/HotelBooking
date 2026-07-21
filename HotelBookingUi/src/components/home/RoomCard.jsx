@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 const ROOM_TYPE_LABELS = {
   STANDARD: { label: 'Standard', color: 'bg-stone-100 text-stone-600' },
   DELUXE: { label: 'Deluxe', color: 'bg-amber-50 text-amber-700' },
-  SUITE: { label: 'Suite', color: 'bg-gold-100 text-gold-700' },
+  SUITE: { label: 'Suite', color: 'bg-yellow-50 text-yellow-700' },
   PRESIDENTIAL: { label: 'Presidential', color: 'bg-yellow-50 text-yellow-700' },
 };
 
@@ -30,36 +30,32 @@ const RoomCard = ({ room }) => {
   return (
     <div
       id={`room-card-${id}`}
-      className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 border border-stone-100 flex flex-col"
+      className="bg-white rounded-xl overflow-hidden shadow-sm border border-stone-100 flex flex-col"
     >
       {/* Image */}
-      <div className="relative overflow-hidden h-52">
+      <div className="relative h-48">
         <img
           src={imgSrc}
           alt={name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover"
           onError={(e) => { e.target.src = '/room-deluxe.png'; }}
         />
         {/* Badges */}
         <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
-          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${typeInfo.color} shadow-sm`}>
+          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${typeInfo.color}`}>
             {typeInfo.label}
           </span>
           {!available && (
-            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600 shadow-sm">
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">
               Hết phòng
             </span>
           )}
         </div>
-        {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
       {/* Body */}
       <div className="p-5 flex flex-col flex-1">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="font-bold text-stone-900 text-base leading-tight line-clamp-1">{name}</h3>
-        </div>
+        <h3 className="font-bold text-stone-900 text-base leading-tight mb-2 line-clamp-1">{name}</h3>
 
         {/* Stats */}
         <div className="flex items-center gap-4 text-xs text-stone-500 mb-3">
@@ -87,15 +83,16 @@ const RoomCard = ({ room }) => {
         <div className="mt-auto flex items-end justify-between">
           <div>
             <p className="text-xs text-stone-400">Giá từ</p>
-            <p className="text-lg font-extrabold text-gold-600">{formatPrice(pricePerNight)}</p>
+            <p className="text-lg font-extrabold text-amber-600">{formatPrice(pricePerNight)}</p>
             <p className="text-xs text-stone-400">/ đêm</p>
           </div>
           <Link
             to={`/room/${id}`}
-            className={`text-sm font-bold px-4 py-2 rounded-xl transition-all duration-200 ${available
-                ? 'bg-gold-600 hover:bg-gold-700 text-white shadow hover:shadow-md active:scale-95'
+            className={`text-sm font-bold px-4 py-2 rounded-xl ${
+              available
+                ? 'bg-amber-600 hover:bg-amber-700 text-white'
                 : 'bg-stone-200 text-stone-400 cursor-not-allowed pointer-events-none'
-              }`}
+            }`}
           >
             {available ? 'Đặt Ngay' : 'Hết Phòng'}
           </Link>

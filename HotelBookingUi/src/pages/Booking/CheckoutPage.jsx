@@ -1,150 +1,349 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import roomApi from '../../services/api/roomApi';
 import bookingApi from '../../services/api/bookingApi';
-import { MOCK_ROOMS } from '../../services/mockRooms';
 
 const formatPrice = (price) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
-const getNights = (checkIn, checkOut) => {
+const parseNights = (checkIn, checkOut) => {
   if (!checkIn || !checkOut) return 0;
-  return Math.max(0, Math.floor((new Date(`${checkOut}T00:00:00`) - new Date(`${checkIn}T00:00:00`)) / 86400000));
+  const start = new Date(`${checkIn}T00:00:00`);
+  const end = new Date(`${checkOut}T00:00:00`);
+  const diff = Math.floor((end - start) / (1000 * 60 * 60 * 24));
+  return diff > 0 ? diff : 0;
 };
-
-const fieldClass = 'mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2.5 text-stone-900 outline-none focus:border-gold-600 focus:ring-1 focus:ring-gold-600';
-const createBookingId = () => `BOOK-${Date.now()}`;
 
 const CheckoutPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const roomId = searchParams.get('roomId');
+  const initialCheckIn = searchParams.get('checkIn') || '';
+  const initialCheckOut = searchParams.get('checkOut') || '';
+  const initialCapacity = searchParams.get('capacity') || '1';
+
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [reservation, setReservation] = useState({
-    checkIn: searchParams.get('checkIn') || '',
-    checkOut: searchParams.get('checkOut') || '',
-    capacity: searchParams.get('capacity') || '1',
-  });
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
-    fullName: user?.name || '', email: user?.email || '', phone: '', paymentMethod: 'cash', requests: '',
+    fullName: user?.name || '',
+    email: user?.email || '',
+    phone: '',
+    paymentMethod: 'card',
+    requests: '',
+  });
+  const [reservation, setReservation] = useState({
+    checkIn: initialCheckIn,
+    checkOut: initialCheckOut,
+    capacity: initialCapacity,
   });
 
   useEffect(() => {
-    const loadRoom = async () => {
-      if (!roomId) {
-        setError('Vui lòng chọn phòng trước khi đặt.');
-        setLoading(false);
-        return;
-      }
+    setReservation({
+      checkIn: initialCheckIn,
+      checkOut: initialCheckOut,
+      capacity: initialCapacity,
+    });
+  }, [initialCheckIn, initialCheckOut, initialCapacity]);
+
+  useEffect(() => {
+    const fetchRoom = async () => {
+      setLoading(true);
+      setError('');
       try {
         const response = await roomApi.getRoomById(roomId);
-        setRoom(response?.id ? response : MOCK_ROOMS.find((item) => String(item.id) === roomId));
+        if (response && response.id) {
+          setRoom(response);
+        } else {
+          setError('Không tìm thấy thông tin phòng để thanh toán.');
+        }
       } catch {
-        setRoom(MOCK_ROOMS.find((item) => String(item.id) === roomId));
+        setError('Không thể tải thông tin phòng. Vui lòng thử lại.');
       } finally {
         setLoading(false);
       }
     };
-    loadRoom();
+
+    if (roomId) {
+      fetchRoom();
+    } else {
+      setLoading(false);
+      setError('Xin vui lòng chọn phòng trước khi tiến hành thanh toán.');
+    }
   }, [roomId]);
 
-  const nights = useMemo(() => getNights(reservation.checkIn, reservation.checkOut), [reservation]);
-  const subTotal = room ? room.pricePerNight * nights : 0;
+  const nights = useMemo(
+    () => parseNights(reservation.checkIn, reservation.checkOut),
+    [reservation.checkIn, reservation.checkOut],
+  );
+
+  const subTotal = room ? room.pricePerNight * Math.max(1, nights) : 0;
   const serviceFee = Math.round(subTotal * 0.08);
   const totalAmount = subTotal + serviceFee;
 
-  const update = (setter) => (event) => {
+  const handleFormChange = (event) => {
     const { name, value } = event.target;
-    setter((current) => ({ ...current, [name]: value }));
-    setError('');
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleReservationChange = (event) => {
+    const { name, value } = event.target;
+    setReservation((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!room || nights <= 0) return setError('Ngày trả phòng phải sau ngày nhận phòng.');
-    if (!form.fullName.trim() || !form.email.trim() || !form.phone.trim()) return setError('Vui lòng điền đầy đủ thông tin liên hệ.');
+    if (!room) return;
+    if (!reservation.checkIn || !reservation.checkOut || nights <= 0) {
+      setError('Vui lòng chọn thời gian nhận và trả phòng hợp lệ.');
+      return;
+    }
+    if (!form.fullName || !form.email || !form.phone) {
+      setError('Vui lòng điền đầy đủ thông tin liên hệ.');
+      return;
+    }
 
     const booking = {
-      id: createBookingId(), roomId: room.id, roomName: room.name, pricePerNight: room.pricePerNight,
-      ...reservation, nights, subTotal, serviceFee, totalAmount,
-      customer: { fullName: form.fullName, email: form.email, phone: form.phone },
-      paymentMethod: form.paymentMethod, requests: form.requests, createdAt: new Date().toISOString(),
+      roomId: room.id,
+      checkIn: reservation.checkIn,
+      checkOut: reservation.checkOut,
+      capacity: Number(reservation.capacity),
+      customer: {
+        fullName: form.fullName,
+        email: form.email,
+        phone: form.phone,
+      },
+      paymentMethod: form.paymentMethod,
+      requests: form.requests,
     };
 
+    setSubmitting(true);
+    setError('');
     try {
-      setSubmitting(true);
       const response = await bookingApi.createBooking(booking);
-      if (response?.success) navigate(`/success?bookingId=${response.data.id}`);
-      else setError(response?.message || 'Không thể hoàn tất đặt phòng.');
+      if (!response?.success || !response.data?.id) {
+        throw new Error(response?.message || 'Không thể tạo đơn đặt phòng.');
+      }
+      sessionStorage.setItem('hotel_booking_confirmation', JSON.stringify(response.data));
+      navigate(`/success?bookingId=${response.data.id}`);
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'Không thể kết nối đến máy chủ.');
+      setError(requestError.response?.data?.message || requestError.message || 'Không thể tạo đơn đặt phòng. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) return <div className="min-h-[60vh] grid place-items-center text-stone-500">Đang tải thông tin...</div>;
-  if (!room) return <div className="min-h-[60vh] grid place-items-center text-center"><div><p className="text-stone-600">{error || 'Không tìm thấy phòng.'}</p><Link to="/search" className="mt-4 inline-block font-medium text-gold-700">Chọn phòng khác</Link></div></div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-5xl animate-pulse">
+          <div className="h-20 rounded-3xl bg-stone-200 mb-6" />
+          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="space-y-4">
+              <div className="h-10 rounded-full bg-stone-200" />
+              <div className="h-80 rounded-[2rem] bg-stone-200" />
+            </div>
+            <div className="space-y-4">
+              <div className="h-80 rounded-[2rem] bg-stone-200" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <main className="bg-stone-50 py-8 sm:py-12">
-      <div className="mx-auto max-w-5xl px-4">
-        <Link to={`/room/${room.id}`} className="text-sm font-medium text-stone-600 hover:text-gold-700">← Chi tiết phòng</Link>
-        <h1 className="mt-4 text-3xl font-semibold text-stone-900">Thông tin đặt phòng</h1>
-        <p className="mt-1 text-stone-500">Điền thông tin bên dưới để hoàn tất.</p>
+    <div className="min-h-screen bg-stone-50 py-10">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="mb-8">
+          <Link to={room ? `/room/${room.id}` : '/search'} className="text-sm text-gold-600 hover:text-gold-700 font-semibold">
+            ← Quay về chi tiết phòng
+          </Link>
+          <h1 className="mt-3 text-3xl font-extrabold text-stone-900">Thanh toán đặt phòng</h1>
+          <p className="mt-2 text-sm text-stone-500">Hoàn tất đơn hàng và xác nhận chỗ nghỉ của bạn.</p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
-          <div className="rounded-lg border border-stone-200 bg-white p-5 sm:p-7">
-            {error && <p className="mb-5 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-
-            <section>
-              <h2 className="text-lg font-semibold text-stone-900">Thông tin liên hệ</h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <label className="text-sm text-stone-700">Họ và tên *<input required name="fullName" value={form.fullName} onChange={update(setForm)} className={fieldClass} placeholder="Nguyễn Văn A" /></label>
-                <label className="text-sm text-stone-700">Email *<input required name="email" type="email" value={form.email} onChange={update(setForm)} className={fieldClass} placeholder="email@example.com" /></label>
-                <label className="text-sm text-stone-700 sm:col-span-2">Số điện thoại *<input required name="phone" type="tel" value={form.phone} onChange={update(setForm)} className={fieldClass} placeholder="09xx xxx xxx" /></label>
+        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+          <form onSubmit={handleSubmit} className="rounded-[2rem] bg-white border border-stone-200 p-8 shadow-sm">
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-stone-900 mb-4">Thông tin khách hàng</h2>
+              {error && (
+                <div className="rounded-3xl bg-red-50 border border-red-200 p-4 mb-6 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="block">
+                  <span className="text-sm font-semibold text-stone-700">Họ và tên</span>
+                  <input
+                    name="fullName"
+                    value={form.fullName}
+                    onChange={handleFormChange}
+                    className="mt-2 w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm text-stone-900 outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-200"
+                    placeholder="Nguyễn Văn A"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-semibold text-stone-700">Email</span>
+                  <input
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={handleFormChange}
+                    className="mt-2 w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm text-stone-900 outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-200"
+                    placeholder="email@domain.com"
+                  />
+                </label>
+                <label className="block md:col-span-2">
+                  <span className="text-sm font-semibold text-stone-700">Số điện thoại</span>
+                  <input
+                    name="phone"
+                    value={form.phone}
+                    onChange={handleFormChange}
+                    className="mt-2 w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm text-stone-900 outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-200"
+                    placeholder="09xx xxx xxx"
+                  />
+                </label>
               </div>
-            </section>
+            </div>
 
-            <section className="mt-7 border-t border-stone-200 pt-6">
-              <h2 className="text-lg font-semibold text-stone-900">Thời gian lưu trú</h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                <label className="text-sm text-stone-700">Nhận phòng<input required name="checkIn" type="date" value={reservation.checkIn} onChange={update(setReservation)} className={fieldClass} /></label>
-                <label className="text-sm text-stone-700">Trả phòng<input required name="checkOut" type="date" min={reservation.checkIn || undefined} value={reservation.checkOut} onChange={update(setReservation)} className={fieldClass} /></label>
-                <label className="text-sm text-stone-700">Số khách<select name="capacity" value={reservation.capacity} onChange={update(setReservation)} className={fieldClass}>{Array.from({ length: 6 }, (_, i) => i + 1).map((n) => <option key={n} value={n}>{n} khách</option>)}</select></label>
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-stone-900 mb-4">Chi tiết đặt phòng</h2>
+              <div className="grid gap-4 md:grid-cols-3">
+                <label className="block">
+                  <span className="text-sm font-semibold text-stone-700">Ngày nhận</span>
+                  <input
+                    name="checkIn"
+                    type="date"
+                    value={reservation.checkIn}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={handleReservationChange}
+                    className="mt-2 w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm text-stone-900 outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-200"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-semibold text-stone-700">Ngày trả</span>
+                  <input
+                    name="checkOut"
+                    type="date"
+                    value={reservation.checkOut}
+                    min={reservation.checkIn || new Date().toISOString().split('T')[0]}
+                    onChange={handleReservationChange}
+                    className="mt-2 w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm text-stone-900 outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-200"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-semibold text-stone-700">Số khách</span>
+                  <select
+                    name="capacity"
+                    value={reservation.capacity}
+                    onChange={handleReservationChange}
+                    className="mt-2 w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm text-stone-900 outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-200"
+                  >
+                    {[1, 2, 3, 4, 5, 6].map((n) => (
+                      <option key={n} value={n}>{`${n} khách`}</option>
+                    ))}
+                  </select>
+                </label>
               </div>
-            </section>
 
-            <section className="mt-7 border-t border-stone-200 pt-6">
-              <h2 className="text-lg font-semibold text-stone-900">Thanh toán</h2>
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                {[['cash', 'Thanh toán tại khách sạn'], ['transfer', 'Chuyển khoản'], ['card', 'Thẻ tín dụng']].map(([value, label]) => (
-                  <label key={value} className="flex items-center gap-2 text-sm text-stone-700"><input type="radio" name="paymentMethod" value={value} checked={form.paymentMethod === value} onChange={update(setForm)} className="accent-gold-600" />{label}</label>
+              <label className="block mt-6">
+                <span className="text-sm font-semibold text-stone-700">Ghi chú yêu cầu đặc biệt</span>
+                <textarea
+                  name="requests"
+                  value={form.requests}
+                  onChange={handleFormChange}
+                  rows={4}
+                  className="mt-2 w-full rounded-3xl border border-stone-200 px-4 py-3 text-sm text-stone-900 outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-200"
+                  placeholder="Ví dụ: cần giường đôi, phòng tầng cao..."
+                />
+              </label>
+            </div>
+
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-stone-900 mb-4">Phương thức thanh toán</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                {['card', 'cash', 'transfer'].map((method) => (
+                  <label
+                    key={method}
+                    className={`flex items-center gap-3 rounded-3xl border px-4 py-4 cursor-pointer transition ${form.paymentMethod === method
+                      ? 'border-gold-500 bg-gold-50 text-stone-900'
+                      : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value={method}
+                      checked={form.paymentMethod === method}
+                      onChange={handleFormChange}
+                      className="w-4 h-4 accent-gold-600"
+                    />
+                    <span className="font-semibold capitalize">
+                      {method === 'card' ? 'Thẻ tín dụng' : method === 'cash' ? 'Thanh toán khi nhận' : 'Chuyển khoản'}
+                    </span>
+                  </label>
                 ))}
               </div>
-              <label className="mt-5 block text-sm text-stone-700">Yêu cầu thêm (không bắt buộc)<textarea name="requests" rows="3" value={form.requests} onChange={update(setForm)} className={fieldClass} placeholder="Ví dụ: phòng tầng cao..." /></label>
-            </section>
-          </div>
-
-          <aside className="h-fit rounded-lg border border-stone-200 bg-white p-5 lg:sticky lg:top-24">
-            <img src={room.image || '/room-deluxe.png'} alt={room.name} className="h-36 w-full rounded-md object-cover" />
-            <h2 className="mt-4 font-semibold text-stone-900">{room.name}</h2>
-            <div className="mt-5 space-y-3 border-t border-stone-200 pt-4 text-sm text-stone-600">
-              <div className="flex justify-between"><span>{nights || 0} đêm</span><span>{formatPrice(subTotal)}</span></div>
-              <div className="flex justify-between"><span>Phí dịch vụ</span><span>{formatPrice(serviceFee)}</span></div>
-              <div className="flex justify-between border-t border-stone-200 pt-3 text-base font-semibold text-stone-900"><span>Tổng cộng</span><span>{formatPrice(totalAmount)}</span></div>
             </div>
-            <button type="submit" disabled={submitting} className="mt-5 w-full rounded-md bg-gold-600 px-4 py-3 font-semibold text-white hover:bg-gold-700 disabled:bg-stone-400">{submitting ? 'Đang xử lý...' : 'Xác nhận đặt phòng'}</button>
-            <p className="mt-3 text-center text-xs text-stone-500">Thông tin của bạn được bảo mật.</p>
-          </aside>
-        </form>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-3xl bg-gold-600 px-6 py-4 text-base font-bold text-white shadow-lg transition hover:bg-gold-700 active:scale-[0.99]"
+            >
+              {submitting ? 'Đang xử lý...' : 'Xác nhận đặt phòng'}
+            </button>
+          </form>
+
+          <div className="rounded-[2rem] bg-white border border-stone-200 p-8 shadow-sm">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-stone-900">Tóm tắt đơn hàng</h2>
+              <p className="mt-2 text-sm text-stone-500">Kiểm tra lại thông tin trước khi thanh toán.</p>
+            </div>
+
+            <div className="space-y-4 text-sm text-stone-600">
+              <div className="rounded-3xl bg-stone-50 p-5">
+                <p className="font-semibold text-stone-800">Phòng</p>
+                <p className="mt-2 text-sm text-stone-500">{room.name}</p>
+              </div>
+              <div className="rounded-3xl bg-stone-50 p-5">
+                <div className="flex justify-between mb-2">
+                  <span>Giá mỗi đêm</span>
+                  <span>{formatPrice(room.pricePerNight)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Số đêm</span>
+                  <span>{nights || 1}</span>
+                </div>
+              </div>
+              <div className="rounded-3xl bg-stone-50 p-5">
+                <div className="flex justify-between mb-2">
+                  <span>Tạm tính</span>
+                  <span>{formatPrice(Math.max(subTotal, room.pricePerNight))}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Phí dịch vụ</span>
+                  <span>{formatPrice(serviceFee)}</span>
+                </div>
+              </div>
+              <div className="rounded-[2rem] bg-stone-900 p-5 text-white">
+                <div className="flex justify-between text-sm opacity-80">Tổng thanh toán</div>
+                <div className="mt-3 text-3xl font-extrabold">{formatPrice(totalAmount)}</div>
+              </div>
+            </div>
+
+            <div className="mt-6 text-sm text-stone-500">
+              <p className="font-semibold text-stone-800 mb-2">Lưu ý</p>
+              <p>Hoàn tất đặt phòng ngay, chúng tôi sẽ giữ chỗ cho bạn trong thời gian ngắn.</p>
+            </div>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 };
 

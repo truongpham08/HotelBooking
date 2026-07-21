@@ -4,16 +4,9 @@ import { useSearchParams, Link } from 'react-router-dom';
 import SearchBar from '../../components/home/SearchBar';
 import RoomCard from '../../components/home/RoomCard';
 import roomApi from '../../services/api/roomApi';
-import { MOCK_ROOMS } from '../../services/mockRooms';
 
-// ─── Mock data fallback ───────────────────────────────────────────────────────
-
-const ROOM_TYPES = [
-  { value: '', label: 'Tất cả loại phòng' },
-  { value: 'STANDARD', label: 'Standard' },
-  { value: 'DELUXE', label: 'Deluxe' },
-  { value: 'SUITE', label: 'Suite' },
-  { value: 'PRESIDENTIAL', label: 'Presidential' },
+const DEFAULT_ROOM_TYPES = [
+  { value: '', label: 'Tat ca loai phong' },
 ];
 
 const SORT_OPTIONS = [
@@ -41,10 +34,7 @@ const FilterSection = ({ title, children }) => (
 );
 
 const CheckboxOption = ({ id, label, checked, onChange }) => (
-  <label
-    htmlFor={id}
-    className="flex items-center gap-2.5 cursor-pointer group py-1"
-  >
+  <label htmlFor={id} className="flex items-center gap-2.5 cursor-pointer py-1">
     <input
       id={id}
       type="checkbox"
@@ -52,73 +42,121 @@ const CheckboxOption = ({ id, label, checked, onChange }) => (
       onChange={onChange}
       className="w-4 h-4 accent-amber-600 rounded cursor-pointer"
     />
-    <span className="text-sm text-stone-600 group-hover:text-stone-900 transition-colors">
-      {label}
-    </span>
+    <span className="text-sm text-stone-600">{label}</span>
   </label>
 );
 
+const FilterChip = ({ label, onRemove }) => (
+  <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">
+    {label}
+    <button
+      onClick={onRemove}
+      className="text-amber-500 hover:text-red-500 leading-none text-sm"
+      aria-label="Xóa bộ lọc"
+    >
+      ×
+    </button>
+  </span>
+);
+
+const SkeletonCard = () => (
+  <div className="bg-white rounded-2xl overflow-hidden shadow-md">
+    <div className="h-52 bg-stone-200" />
+    <div className="p-5 space-y-3">
+      <div className="h-4 bg-stone-200 rounded-full w-3/4" />
+      <div className="h-3 bg-stone-100 rounded-full w-1/2" />
+      <div className="flex gap-1.5 mt-2">
+        <div className="h-5 bg-stone-100 rounded-full w-12" />
+        <div className="h-5 bg-stone-100 rounded-full w-16" />
+      </div>
+      <div className="flex justify-between items-end pt-2">
+        <div>
+          <div className="h-3 bg-stone-100 rounded w-10 mb-1" />
+          <div className="h-5 bg-stone-200 rounded w-24" />
+        </div>
+        <div className="h-8 bg-stone-200 rounded-xl w-20" />
+      </div>
+    </div>
+  </div>
+);
+
+const EmptyState = ({ onReset }) => (
+  <div className="flex flex-col items-center justify-center py-20 text-center">
+    <div className="text-6xl mb-4">🔍</div>
+    <h3 className="text-xl font-bold text-stone-800 mb-2">Không tìm thấy phòng phù hợp</h3>
+    <p className="text-stone-500 text-sm max-w-sm mb-6">
+      Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm để xem nhiều kết quả hơn.
+    </p>
+    <button
+      onClick={onReset}
+      className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-2.5 rounded-xl shadow"
+    >
+      Xóa Bộ Lọc
+    </button>
+    <Link to="/" className="mt-3 text-sm text-stone-400 hover:text-stone-600 underline underline-offset-2">
+      Quay về trang chủ
+    </Link>
+  </div>
+);
+
+const ErrorState = ({ message, onRetry }) => (
+  <div className="flex flex-col items-center justify-center py-20 text-center">
+    <div className="text-6xl mb-4">!</div>
+    <h3 className="text-xl font-bold text-stone-800 mb-2">Khong the tai danh sach phong</h3>
+    <p className="text-stone-500 text-sm max-w-sm mb-6">
+      {message || 'Vui long kiem tra backend va thu lai.'}
+    </p>
+    <button
+      onClick={onRetry}
+      className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-2.5 rounded-xl shadow"
+    >
+      Thu Lai
+    </button>
+  </div>
+);
 // ─── Main SearchPage ──────────────────────────────────────────────────────────
 const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // ── State ──────────────────────────────────────────────────────────────────
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalResults, setTotalResults] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // mobile sidebar
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(6);
+  const [roomTypes, setRoomTypes] = useState(DEFAULT_ROOM_TYPES);
+  const [error, setError] = useState('');
 
-  // Filters state
   const [filters, setFilters] = useState({
     keyword: searchParams.get('keyword') || '',
     checkIn: searchParams.get('checkIn') || '',
     checkOut: searchParams.get('checkOut') || '',
     capacity: searchParams.get('capacity') || '',
     roomType: searchParams.get('roomType') || '',
-    priceRange: 0, // index in PRICE_RANGES
+    priceRange: 0,
     sortBy: 'price_asc',
     availableOnly: false,
   });
 
-  // ── Apply client-side filters on mock data ────────────────────────────────
-  const applyMockFilters = (data, f) => {
-    let result = [...data];
-    if (f.keyword) {
-      const kw = f.keyword.toLowerCase();
-      result = result.filter(
-        (r) => r.name.toLowerCase().includes(kw) || r.roomType.toLowerCase().includes(kw)
-      );
-    }
-    if (f.roomType) result = result.filter((r) => r.roomType === f.roomType);
-    if (f.capacity) result = result.filter((r) => r.capacity >= parseInt(f.capacity));
-    const pr = PRICE_RANGES[f.priceRange];
-    result = result.filter((r) => r.pricePerNight >= pr.min && r.pricePerNight <= pr.max);
-    if (f.availableOnly) result = result.filter((r) => r.available);
-    return result;
-  };
-
-  const applySortAndFilter = (data, f) => {
-    const sorted = [...data];
-    switch (f.sortBy) {
-      case 'price_asc': return sorted.sort((a, b) => a.pricePerNight - b.pricePerNight);
-      case 'price_desc': return sorted.sort((a, b) => b.pricePerNight - a.pricePerNight);
-      case 'name_asc': return sorted.sort((a, b) => a.name.localeCompare(b.name));
-      case 'capacity_asc': return sorted.sort((a, b) => a.capacity - b.capacity);
-      default: return sorted;
-    }
-  };
-
   // ── Fetch rooms ────────────────────────────────────────────────────────────
   const fetchRooms = useCallback(async () => {
-    await Promise.resolve(); // Tránh render phân tầng đồng bộ trong useEffect
+    await Promise.resolve();
     setLoading(true);
+    setError('');
     try {
+      const priceRange = PRICE_RANGES[filters.priceRange];
       const params = {
         keyword: filters.keyword || undefined,
         checkIn: filters.checkIn || undefined,
         checkOut: filters.checkOut || undefined,
         capacity: filters.capacity || undefined,
         roomType: filters.roomType || undefined,
+        available: filters.availableOnly ? true : undefined,
+        minPrice: priceRange?.min > 0 ? priceRange.min : undefined,
+        maxPrice: Number.isFinite(priceRange?.max) ? priceRange.max : undefined,
+        sortBy: filters.sortBy,
+        page: currentPage,
+        size: pageSize,
       };
       const data = await roomApi.getRooms(params);
       const list = Array.isArray(data)
@@ -127,34 +165,62 @@ const SearchPage = () => {
           ? data.content
           : Array.isArray(data?.data)
             ? data.data
-            : null;
-      const source = list ?? MOCK_ROOMS;
-      let result = applyMockFilters(source, filters);
-      result = applySortAndFilter(result, filters);
-      setRooms(result);
-      setTotalResults(result.length);
+            : [];
+      setRooms(list);
+      setTotalResults(Number.isFinite(data?.totalElements) ? data.totalElements : list.length);
+      setTotalPages(Number.isFinite(data?.totalPages) ? data.totalPages : 1);
+      setCurrentPage(Number.isFinite(data?.page) ? data.page : currentPage);
     } catch {
-      // Use mock data if API fails
-      let result = applyMockFilters(MOCK_ROOMS, filters);
-      result = applySortAndFilter(result, filters);
-      setRooms(result);
-      setTotalResults(result.length);
+      setRooms([]);
+      setTotalResults(0);
+      setError('Khong ket noi duoc API phong. Hay dam bao backend dang chay o cong 8080.');
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, currentPage, pageSize]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    const fetchRoomTypes = async () => {
+      try {
+        const data = await roomApi.getRoomTypes();
+        const types = Array.isArray(data) ? data : [];
+        setRoomTypes([
+          DEFAULT_ROOM_TYPES[0],
+          ...types.filter((type) => type?.value && type?.label),
+        ]);
+      } catch {
+        setRoomTypes(DEFAULT_ROOM_TYPES);
+      }
+    };
+
+    fetchRoomTypes();
+  }, []);
+  useEffect(() => {
+
     fetchRooms();
   }, [fetchRooms]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const updateFilter = (key, value) => {
+    setCurrentPage(0);
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleSearch = (values, params) => {
+    setCurrentPage(0);
+    setFilters((prev) => ({
+      ...prev,
+      keyword: values.keyword,
+      checkIn: values.checkIn,
+      checkOut: values.checkOut,
+      capacity: values.capacity,
+      roomType: '',
+    }));
+    setSearchParams(params);
+  };
+
   const resetFilters = () => {
+    setCurrentPage(0);
     setFilters({
       keyword: '',
       checkIn: '',
@@ -176,15 +242,15 @@ const SearchPage = () => {
     filters.availableOnly ? 'avail' : '',
   ].filter(Boolean).length;
 
-  // ─── Sidebar Filter Panel ────────────────────────────────────────────────
-  const renderFilterPanel = () => (
-    <aside className="w-full bg-white rounded-2xl shadow-md border border-stone-100 p-6">
+  // ─── Filter Panel ────────────────────────────────────────────────────────
+  const FilterPanel = () => (
+    <aside className="w-full bg-white rounded-xl shadow-sm border border-stone-100 p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <h2 className="font-bold text-stone-900 text-base flex items-center gap-2">
           🎛️ Bộ Lọc
           {activeFilterCount > 0 && (
-            <span className="bg-gold-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+            <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
               {activeFilterCount}
             </span>
           )}
@@ -202,13 +268,13 @@ const SearchPage = () => {
       {/* Loại phòng */}
       <FilterSection title="Loại Phòng">
         <div className="space-y-1">
-          {ROOM_TYPES.map((t) => (
+          {roomTypes.map((t) => (
             <label
               key={t.value}
               htmlFor={`type-${t.value}`}
-              className={`flex items-center gap-2.5 cursor-pointer py-1.5 px-2 rounded-lg transition-colors ${filters.roomType === t.value
-                  ? 'bg-gold-50 text-gold-700'
-                  : 'hover:bg-stone-50 text-stone-600'
+              className={`flex items-center gap-2.5 cursor-pointer py-1.5 px-2 rounded-lg ${filters.roomType === t.value
+                ? 'bg-amber-50 text-amber-700'
+                : 'text-stone-600'
                 }`}
             >
               <input
@@ -233,9 +299,9 @@ const SearchPage = () => {
             <label
               key={idx}
               htmlFor={`price-${idx}`}
-              className={`flex items-center gap-2.5 cursor-pointer py-1.5 px-2 rounded-lg transition-colors ${filters.priceRange === idx
-                  ? 'bg-gold-50 text-gold-700'
-                  : 'hover:bg-stone-50 text-stone-600'
+              className={`flex items-center gap-2.5 cursor-pointer py-1.5 px-2 rounded-lg ${filters.priceRange === idx
+                ? 'bg-amber-50 text-amber-700'
+                : 'text-stone-600'
                 }`}
             >
               <input
@@ -259,9 +325,9 @@ const SearchPage = () => {
             <button
               key={n}
               onClick={() => updateFilter('capacity', n)}
-              className={`py-1.5 rounded-lg text-xs font-semibold border transition-all ${filters.capacity === n
-                  ? 'bg-gold-600 text-white border-gold-600 shadow'
-                  : 'bg-white border-stone-200 text-stone-600 hover:border-gold-400 hover:text-gold-600'
+              className={`py-1.5 rounded-lg text-xs font-semibold border ${filters.capacity === n
+                ? 'bg-amber-600 text-white border-amber-600'
+                : 'bg-white border-stone-200 text-stone-600 hover:border-amber-400 hover:text-amber-600'
                 }`}
             >
               {n === '' ? 'Tất cả' : `${n}+`}
@@ -291,6 +357,7 @@ const SearchPage = () => {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <SearchBar
             compact
+            onSearch={handleSearch}
             initialValues={{
               keyword: filters.keyword,
               checkIn: filters.checkIn,
@@ -316,19 +383,6 @@ const SearchPage = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Mobile filter toggle */}
-            <button
-              id="mobile-filter-btn"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden flex items-center gap-2 border border-stone-200 bg-white text-stone-700 text-sm font-semibold px-4 py-2 rounded-xl shadow-sm hover:border-gold-400 transition"
-            >
-              🎛️ Lọc
-              {activeFilterCount > 0 && (
-                <span className="bg-gold-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
 
             {/* Sort dropdown */}
             <div className="flex items-center gap-2">
@@ -339,7 +393,7 @@ const SearchPage = () => {
                 id="sort-select"
                 value={filters.sortBy}
                 onChange={(e) => updateFilter('sortBy', e.target.value)}
-                className="border border-stone-200 bg-white rounded-xl px-3 py-2 text-sm text-stone-700 outline-none focus:ring-2 focus:ring-gold-400 focus:border-gold-400 transition shadow-sm"
+                className="border border-stone-200 bg-white rounded-xl px-3 py-2 text-sm text-stone-700 outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 shadow-sm"
               >
                 {SORT_OPTIONS.map((s) => (
                   <option key={s.value} value={s.value}>{s.label}</option>
@@ -360,7 +414,7 @@ const SearchPage = () => {
             )}
             {filters.roomType && (
               <FilterChip
-                label={`Loại: ${ROOM_TYPES.find((t) => t.value === filters.roomType)?.label}`}
+                label={`Loại: ${roomTypes.find((t) => t.value === filters.roomType)?.label}`}
                 onRemove={() => updateFilter('roomType', '')}
               />
             )}
@@ -388,40 +442,12 @@ const SearchPage = () => {
         {/* ── Main grid: sidebar + results ── */}
         <div className="flex gap-6">
 
-          {/* Sidebar – desktop */}
-          <div className="hidden lg:block w-64 shrink-0">
+          {/* Sidebar */}
+          <div className="w-64 shrink-0">
             <div className="sticky top-36">
-              {renderFilterPanel()}
+              <FilterPanel />
             </div>
           </div>
-
-          {/* Mobile sidebar overlay */}
-          {sidebarOpen && (
-            <div className="lg:hidden fixed inset-0 z-50 flex">
-              <div
-                className="flex-1 bg-black/40"
-                onClick={() => setSidebarOpen(false)}
-              />
-              <div className="w-72 bg-stone-50 h-full overflow-y-auto p-4 shadow-2xl">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-bold text-stone-900">Bộ Lọc</h2>
-                  <button
-                    onClick={() => setSidebarOpen(false)}
-                    className="text-stone-400 hover:text-stone-700 text-2xl leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-                {renderFilterPanel()}
-                <button
-                  onClick={() => setSidebarOpen(false)}
-                  className="w-full mt-4 bg-gold-600 text-white font-bold py-3 rounded-xl"
-                >
-                  Áp Dụng Bộ Lọc ({totalResults} phòng)
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Results grid */}
           <div className="flex-1 min-w-0">
@@ -431,6 +457,8 @@ const SearchPage = () => {
                   <SkeletonCard key={i} />
                 ))}
               </div>
+            ) : error ? (
+              <ErrorState message={error} onRetry={fetchRooms} />
             ) : rooms.length === 0 ? (
               <EmptyState onReset={resetFilters} />
             ) : (
@@ -441,25 +469,38 @@ const SearchPage = () => {
                   ))}
                 </div>
 
-                {/* Pagination placeholder */}
-                <div className="flex justify-center mt-10">
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3].map((p) => (
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-10">
+                    <div className="flex items-center gap-1">
                       <button
-                        key={p}
-                        className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${p === 1
-                            ? 'bg-gold-600 text-white shadow'
-                            : 'bg-white border border-stone-200 text-stone-600 hover:border-gold-400 hover:text-gold-600'
-                          }`}
+                        onClick={() => setCurrentPage((page) => Math.max(page - 1, 0))}
+                        disabled={currentPage === 0}
+                        className="w-9 h-9 rounded-lg text-sm font-semibold bg-white border border-stone-200 text-stone-500 hover:border-amber-400 disabled:opacity-40 disabled:hover:border-stone-200"
                       >
-                        {p}
+                        &lt;
                       </button>
-                    ))}
-                    <button className="w-9 h-9 rounded-lg text-sm font-semibold bg-white border border-stone-200 text-stone-500 hover:border-gold-400 transition-all">
-                      →
-                    </button>
+                      {Array.from({ length: totalPages }, (_, index) => index).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-9 h-9 rounded-lg text-sm font-semibold border ${page === currentPage
+                            ? 'bg-amber-600 text-white border-amber-600'
+                            : 'bg-white border-stone-200 text-stone-600 hover:border-amber-400 hover:text-amber-600'
+                            }`}
+                        >
+                          {page + 1}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages - 1))}
+                        disabled={currentPage >= totalPages - 1}
+                        className="w-9 h-9 rounded-lg text-sm font-semibold bg-white border border-stone-200 text-stone-500 hover:border-amber-400 disabled:opacity-40 disabled:hover:border-stone-200"
+                      >
+                        &gt;
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </>
             )}
           </div>
@@ -469,59 +510,9 @@ const SearchPage = () => {
   );
 };
 
-// ─── Helper sub-components ────────────────────────────────────────────────────
-
-const FilterChip = ({ label, onRemove }) => (
-  <span className="inline-flex items-center gap-1.5 bg-gold-50 border border-gold-200 text-gold-700 text-xs font-semibold px-3 py-1 rounded-full">
-    {label}
-    <button
-      onClick={onRemove}
-      className="text-gold-500 hover:text-red-500 transition-colors leading-none text-sm"
-      aria-label="Xóa bộ lọc"
-    >
-      ×
-    </button>
-  </span>
-);
-
-const SkeletonCard = () => (
-  <div className="bg-white rounded-2xl overflow-hidden shadow-md animate-pulse">
-    <div className="h-52 bg-stone-200" />
-    <div className="p-5 space-y-3">
-      <div className="h-4 bg-stone-200 rounded-full w-3/4" />
-      <div className="h-3 bg-stone-100 rounded-full w-1/2" />
-      <div className="flex gap-1.5 mt-2">
-        <div className="h-5 bg-stone-100 rounded-full w-12" />
-        <div className="h-5 bg-stone-100 rounded-full w-16" />
-      </div>
-      <div className="flex justify-between items-end pt-2">
-        <div>
-          <div className="h-3 bg-stone-100 rounded w-10 mb-1" />
-          <div className="h-5 bg-stone-200 rounded w-24" />
-        </div>
-        <div className="h-8 bg-stone-200 rounded-xl w-20" />
-      </div>
-    </div>
-  </div>
-);
-
-const EmptyState = ({ onReset }) => (
-  <div className="flex flex-col items-center justify-center py-20 text-center">
-    <div className="text-6xl mb-4">🔍</div>
-    <h3 className="text-xl font-bold text-stone-800 mb-2">Không tìm thấy phòng phù hợp</h3>
-    <p className="text-stone-500 text-sm max-w-sm mb-6">
-      Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm để xem nhiều kết quả hơn.
-    </p>
-    <button
-      onClick={onReset}
-      className="bg-gold-600 hover:bg-gold-700 text-white font-bold px-6 py-2.5 rounded-xl transition-all shadow hover:shadow-md active:scale-95"
-    >
-      Xóa Bộ Lọc
-    </button>
-    <Link to="/" className="mt-3 text-sm text-stone-400 hover:text-stone-600 underline underline-offset-2">
-      Quay về trang chủ
-    </Link>
-  </div>
-);
-
 export default SearchPage;
+
+
+
+
+

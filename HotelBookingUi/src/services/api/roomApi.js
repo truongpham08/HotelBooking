@@ -1,29 +1,45 @@
-// File: src/services/api/roomApi.js
+
 import axiosClient from './axiosClient';
 
 const roomApi = {
   /**
-   * Lấy danh sách phòng với bộ lọc
-   * @param {Object} params - { keyword, roomType, minPrice, maxPrice, checkIn, checkOut, capacity, page, size }
+  
+   * @param {Object}
    */
   getRooms: (params = {}) => {
     return axiosClient.get('/rooms', { params });
   },
 
   /**
-   * Lấy chi tiết một phòng theo ID
+   
    * @param {number|string} id
    */
   getRoomById: (id) => {
     return axiosClient.get(`/rooms/${id}`);
   },
 
-  /**
-   * Lấy danh sách phòng nổi bật (featured) cho trang chủ
-   */
+  createRoom: (data) => {
+    return axiosClient.post('/rooms', data);
+  },
+
+  updateRoom: (id, data) => {
+    return axiosClient.put(`/rooms/${id}`, data);
+  },
+
+  deleteRoom: (id) => {
+    return axiosClient.delete(`/rooms/${id}`);
+  },
+
+
   getFeaturedRooms: () => {
-    return axiosClient.get('/rooms', { params: { featured: true, size: 4 } });
+    return axiosClient.get('/rooms', { params: { featured: true, page: 0, size: 4 } });
+  },
+
+  getRoomTypes: () => {
+    return axiosClient.get('/rooms/types');
   },
 };
 
 export default roomApi;
+
+
