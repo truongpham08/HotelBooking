@@ -1,9 +1,10 @@
-﻿package com.sba301.hotelbooking.entity;
+package com.sba301.hotelbooking.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import com.sba301.hotelbooking.enums.BookingStatus;
 
 @Entity
 @Table(name = "bookings")
