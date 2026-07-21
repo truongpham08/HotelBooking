@@ -1,4 +1,4 @@
-package com.example.hotelbooking.dto.request;
+package com.sba301.hotelbooking.dto.request;
 
 import lombok.Data;
 
@@ -6,3 +6,4 @@ import lombok.Data;
 public class BookingStatusRequest {
     private String status;
 }
+

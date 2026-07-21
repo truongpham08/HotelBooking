@@ -1,46 +1,37 @@
 package com.sba301.hotelbooking.controller;
 
+import com.sba301.hotelbooking.dto.request.BookingStatusRequest;
+import com.sba301.hotelbooking.dto.response.BookingResponse;
+import com.sba301.hotelbooking.service.BookingService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.sba301.hotelbooking.dto.request.UpdateBookingStatusRequest;
-import com.sba301.hotelbooking.dto.response.BookingResponse;
-import com.sba301.hotelbooking.dto.response.DashboardStatsResponse;
-import com.sba301.hotelbooking.service.AdminBookingService;
-
-import jakarta.validation.Valid;
-
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/admin/bookings")
+@CrossOrigin(origins = "http://localhost:5173")
 public class AdminBookingController {
 
-    private final AdminBookingService adminBookingService;
+    @Autowired
+    private BookingService bookingService;
 
-    public AdminBookingController(AdminBookingService adminBookingService) {
-        this.adminBookingService = adminBookingService;
-    }
-
-    @GetMapping("/dashboard/stats")
-    public ResponseEntity<DashboardStatsResponse> getDashboardStats() {
-        return ResponseEntity.ok(adminBookingService.getDashboardStats());
-    }
-
-    @GetMapping("/bookings")
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<BookingResponse>> getAllBookings() {
-        return ResponseEntity.ok(adminBookingService.getAllBookings());
+        return ResponseEntity.ok(bookingService.getAllBookings());
     }
 
-    @PutMapping("/bookings/{id}/status")
-    public ResponseEntity<BookingResponse> updateBookingStatus(
-            @PathVariable Long id,
-            @Valid @RequestBody UpdateBookingStatusRequest request) {
-        return ResponseEntity.ok(adminBookingService.updateBookingStatus(id, request));
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BookingResponse> updateStatus(
+            @PathVariable String id,
+            @RequestBody BookingStatusRequest request) {
+        
+        BookingResponse updated = bookingService.updateBookingStatus(id, request.getStatus());
+        return ResponseEntity.ok(updated);
     }
 }
+

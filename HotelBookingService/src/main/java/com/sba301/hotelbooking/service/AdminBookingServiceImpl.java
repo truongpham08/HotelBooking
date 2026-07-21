@@ -35,7 +35,7 @@ public class AdminBookingServiceImpl implements AdminBookingService {
 
     @Override
     @Transactional
-    public BookingResponse updateBookingStatus(Long id, UpdateBookingStatusRequest request) {
+    public BookingResponse updateBookingStatus(String id, UpdateBookingStatusRequest request) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + id));
         

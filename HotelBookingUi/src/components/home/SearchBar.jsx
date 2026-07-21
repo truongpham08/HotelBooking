@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const SearchBar = ({ initialValues = {}, compact = false }) => {
+const SearchBar = ({ initialValues = {}, compact = false, onSearch }) => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     checkIn: initialValues.checkIn || '',
@@ -25,6 +25,10 @@ const SearchBar = ({ initialValues = {}, compact = false }) => {
     if (form.checkOut) params.set('checkOut', form.checkOut);
     if (form.capacity) params.set('capacity', form.capacity);
     if (form.keyword) params.set('keyword', form.keyword);
+    if (onSearch) {
+      onSearch(form, params);
+      return;
+    }
     navigate(`/search?${params.toString()}`);
   };
 

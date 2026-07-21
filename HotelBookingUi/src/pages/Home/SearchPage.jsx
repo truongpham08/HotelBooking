@@ -6,7 +6,7 @@ import RoomCard from '../../components/home/RoomCard';
 import roomApi from '../../services/api/roomApi';
 
 const DEFAULT_ROOM_TYPES = [
-  { value: '', label: 'Tat ca loai phong' },
+  { value: '', label: 'Tất cả loại phòng' },
 ];
 
 const SORT_OPTIONS = [
@@ -102,15 +102,15 @@ const EmptyState = ({ onReset }) => (
 const ErrorState = ({ message, onRetry }) => (
   <div className="flex flex-col items-center justify-center py-20 text-center">
     <div className="text-6xl mb-4">!</div>
-    <h3 className="text-xl font-bold text-stone-800 mb-2">Khong the tai danh sach phong</h3>
+    <h3 className="text-xl font-bold text-stone-800 mb-2">Không thể tải danh sách phòng</h3>
     <p className="text-stone-500 text-sm max-w-sm mb-6">
-      {message || 'Vui long kiem tra backend va thu lai.'}
+      {message || 'Vui lòng kiểm tra backend và thử lại.'}
     </p>
     <button
       onClick={onRetry}
       className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-2.5 rounded-xl shadow"
     >
-      Thu Lai
+      Thử Lại
     </button>
   </div>
 );
@@ -173,7 +173,7 @@ const SearchPage = () => {
     } catch {
       setRooms([]);
       setTotalResults(0);
-      setError('Khong ket noi duoc API phong. Hay dam bao backend dang chay o cong 8080.');
+      setError('Không kết nối được API phòng. Hãy đảm bảo backend đang chạy ở cổng 8080.');
     } finally {
       setLoading(false);
     }
@@ -204,6 +204,19 @@ const SearchPage = () => {
   const updateFilter = (key, value) => {
     setCurrentPage(0);
     setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSearch = (values, params) => {
+    setCurrentPage(0);
+    setFilters((prev) => ({
+      ...prev,
+      keyword: values.keyword,
+      checkIn: values.checkIn,
+      checkOut: values.checkOut,
+      capacity: values.capacity,
+      roomType: '',
+    }));
+    setSearchParams(params);
   };
 
   const resetFilters = () => {
@@ -344,6 +357,7 @@ const SearchPage = () => {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <SearchBar
             compact
+            onSearch={handleSearch}
             initialValues={{
               keyword: filters.keyword,
               checkIn: filters.checkIn,
