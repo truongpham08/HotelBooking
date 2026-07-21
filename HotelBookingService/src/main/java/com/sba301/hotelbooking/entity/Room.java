@@ -17,6 +17,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Nationalized;
 
 @Entity
 @Table(name = "rooms")
@@ -26,6 +27,7 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Nationalized
     @Column(nullable = false, length = 120)
     private String name;
 
@@ -46,6 +48,7 @@ public class Room {
 
     @ElementCollection
     @CollectionTable(name = "room_amenities", joinColumns = @JoinColumn(name = "room_id"))
+    @Nationalized
     @Column(name = "amenity", nullable = false, length = 100)
     private List<String> amenities = new ArrayList<>();
 

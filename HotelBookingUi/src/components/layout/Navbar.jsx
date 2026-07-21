@@ -1,8 +1,10 @@
 // File: src/components/layout/Navbar.jsx
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
   const location = useLocation();
+  const { user, logout } = useAuth();
   const isAdminPage = location.pathname.startsWith('/admin');
 
   if (isAdminPage) return null; // Không hiển thị Navbar khách ở trang Admin
@@ -33,20 +35,35 @@ const Navbar = () => {
               <Link to="/profile" className={`${activeClass('/profile')} transition-colors`}>
                 Tài Khoản
               </Link>
-              <Link to="/admin" className="text-stone-500 hover:text-stone-900 border border-stone-200 px-3 py-1 rounded-md transition-colors bg-stone-50">
-                Dashboard Admin
-              </Link>
+              {user?.role === 'ADMIN' && (
+                <Link to="/admin" className="text-stone-500 hover:text-stone-900 border border-stone-200 px-3 py-1 rounded-md transition-colors bg-stone-50">
+                  Dashboard Admin
+                </Link>
+              )}
             </div>
           </div>
 
           {/* Nút hành động */}
           <div className="flex items-center space-x-4">
-            <Link to="/login" className="text-sm font-semibold text-stone-700 hover:text-stone-900 transition-colors">
-              Đăng Nhập
-            </Link>
-            <Link to="/register" className="bg-gold-600 hover:bg-gold-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors shadow-sm">
-              Đăng Ký
-            </Link>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-semibold text-stone-700">
+                  Xin chào, <span className="text-gold-600">{user.fullName || user.email}</span>
+                </span>
+                <Link to="/profile" className="text-sm font-semibold text-stone-500 hover:text-stone-900 transition-colors">
+                  Hồ sơ
+                </Link>
+              </div>
+            ) : (
+              <>
+                <Link to="/login" className="text-sm font-semibold text-stone-700 hover:text-stone-900 transition-colors">
+                  Đăng Nhập
+                </Link>
+                <Link to="/register" className="bg-gold-600 hover:bg-gold-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors shadow-sm">
+                  Đăng Ký
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

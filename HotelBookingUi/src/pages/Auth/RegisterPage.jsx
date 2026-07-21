@@ -1,7 +1,8 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import authApi from '../../services/api/authApi';
 
 // src/pages/Auth/RegisterPage.jsx - quân
-// TODO: Form đăng ký (họ tên, email, SĐT, mật khẩu)
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     fullName: '',
@@ -15,13 +16,15 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -30,8 +33,22 @@ const RegisterPage = () => {
       return;
     }
 
-    // TODO: Validate và gọi API đăng ký
-    console.log('Register data:', formData);
+    setLoading(true);
+    try {
+      await authApi.register({
+        fullName: formData.fullName,
+        email: formData.email,
+        address: formData.address,
+        phone: formData.phone,
+        password: formData.password
+      });
+      // Chuyển hướng tới trang đăng nhập sau khi đăng ký thành công
+      navigate('/login');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -184,9 +201,10 @@ const RegisterPage = () => {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-gold-600 hover:bg-gold-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 transition-colors"
+                disabled={loading}
+                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-gold-600 hover:bg-gold-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 transition-colors disabled:opacity-50"
               >
-                Đăng ký
+                {loading ? 'Đang đăng ký...' : 'Đăng ký'}
               </button>
             </div>
           </form>
