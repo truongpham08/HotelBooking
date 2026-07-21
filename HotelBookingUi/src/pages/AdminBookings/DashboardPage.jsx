@@ -31,8 +31,8 @@ const DashboardPage = () => {
   return (
     <div className="p-8 min-h-screen bg-gray-50/50">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Overview Dashboard</h1>
-        <p className="text-gray-500 mt-2">Welcome back! Here's what's happening with your hotel today.</p>
+        <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Tổng Quan</h1>
+        <p className="text-gray-500 mt-2">Chào mừng trở lại! Dưới đây là hoạt động của khách sạn hôm nay.</p>
       </div>
 
       {loading ? (
@@ -49,7 +49,7 @@ const DashboardPage = () => {
               </div>
               <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full">+12.5%</span>
             </div>
-            <h2 className="text-gray-500 font-medium text-sm uppercase tracking-wider mb-1">Total Revenue</h2>
+            <h2 className="text-gray-500 font-medium text-sm uppercase tracking-wider mb-1">Tổng Doanh Thu</h2>
             <p className="text-3xl font-extrabold text-gray-900">
               {stats.totalRevenue.toLocaleString()} <span className="text-lg text-gray-500 font-medium">VNĐ</span>
             </p>
@@ -63,7 +63,7 @@ const DashboardPage = () => {
               </div>
               <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">+5.2%</span>
             </div>
-            <h2 className="text-gray-500 font-medium text-sm uppercase tracking-wider mb-1">Total Bookings</h2>
+            <h2 className="text-gray-500 font-medium text-sm uppercase tracking-wider mb-1">Tổng Lượt Đặt</h2>
             <p className="text-3xl font-extrabold text-gray-900">
               {stats.totalBookings}
             </p>
@@ -75,9 +75,9 @@ const DashboardPage = () => {
               <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600">
                 <Home size={24} strokeWidth={2} />
               </div>
-              <span className="text-sm font-medium text-purple-600 bg-purple-50 px-3 py-1 rounded-full">Available</span>
+              <span className="text-sm font-medium text-purple-600 bg-purple-50 px-3 py-1 rounded-full">Trống</span>
             </div>
-            <h2 className="text-gray-500 font-medium text-sm uppercase tracking-wider mb-1">Available Rooms</h2>
+            <h2 className="text-gray-500 font-medium text-sm uppercase tracking-wider mb-1">Phòng Trống</h2>
             <p className="text-3xl font-extrabold text-gray-900">
               {stats.availableRooms}
             </p>
