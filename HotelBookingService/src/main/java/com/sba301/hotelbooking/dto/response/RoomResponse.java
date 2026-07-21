@@ -15,7 +15,8 @@ public record RoomResponse(
         Integer area,
         String image,
         List<String> amenities,
-        Boolean available
+        Boolean available,
+        Boolean featured
 ) {
     public static RoomResponse from(Room room) {
         return new RoomResponse(
@@ -27,8 +28,10 @@ public record RoomResponse(
                 room.getArea(),
                 room.getImage(),
                 room.getAmenities(),
-                room.getAvailable()
+                room.getAvailable(),
+                room.getFeatured()
         );
     }
 }
+
 

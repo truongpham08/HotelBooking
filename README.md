@@ -10,7 +10,7 @@ Dự án được tổ chức theo cấu trúc Monorepo gồm 2 thành phần đ
 
 | Thư mục | Thành phần | Công nghệ chính | Mô tả |
 | :--- | :--- | :--- | :--- |
-| **`HotelBookingService/`** | Backend | Java Spring Boot, MySQL | RESTful API, xử lý nghiệp vụ đặt phòng, xác thực JWT |
+| **`HotelBookingService/`** | Backend | Java Spring Boot, Microsoft SQL Server | RESTful API, xử lý nghiệp vụ đặt phòng, xác thực JWT |
 | **`HotelBookingUi/`** | Frontend | React + Vite, Tailwind CSS | Giao diện đặt phòng cho khách hàng và Admin Dashboard |
 
 ---
@@ -68,7 +68,7 @@ npm run dev
 
 > *(Backend sẽ được phát triển sau khi Frontend hoàn thiện)*
 
-**Yêu cầu:** JDK 17+, Maven, MySQL 8.0+
+**Yêu cầu:** JDK 17+, Maven, Microsoft SQL Server 2019+
 
 ```bash
 # Di chuyển vào thư mục backend
@@ -77,8 +77,15 @@ cd HotelBookingService
 # Cấu hình database trong:
 # src/main/resources/application.properties
 
+# Tạo database trước khi chạy ứng dụng:
+# CREATE DATABASE hotel_booking;
+
+# Có thể ghi đè cấu hình bằng các biến môi trường:
+# DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD,
+# DB_ENCRYPT, DB_TRUST_SERVER_CERTIFICATE
+
 # Chạy ứng dụng Spring Boot
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 Backend API chạy tại: **http://localhost:8080**
@@ -175,6 +182,6 @@ src/
 | **Routing** | React Router DOM v7 | — |
 | **HTTP Client** | Axios | — |
 | **ORM** | — | Spring Data JPA / Hibernate |
-| **Database** | — | MySQL 8.0 |
+| **Database** | — | Microsoft SQL Server 2019+ |
 | **Xác thực** | JWT (lưu LocalStorage) | Spring Security + JWT |
 | **Build** | Vite | Maven |

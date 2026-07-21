@@ -13,6 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sba301.hotelbooking.dto.request.RoomRequest;
 import com.sba301.hotelbooking.dto.response.PageResponse;
 import com.sba301.hotelbooking.dto.response.RoomResponse;
 import com.sba301.hotelbooking.dto.response.RoomTypeResponse;
@@ -74,6 +75,47 @@ public class RoomServiceImpl implements RoomService {
                 .map(RoomTypeResponse::from)
                 .toList();
     }
+
+    @Override
+    @Transactional
+    public RoomResponse createRoom(RoomRequest request) {
+        Room room = new Room();
+        mapRequestToEntity(request, room);
+        Room savedRoom = roomRepository.save(room);
+        return RoomResponse.from(savedRoom);
+    }
+
+    @Override
+    @Transactional
+    public RoomResponse updateRoom(Long id, RoomRequest request) {
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Room not found with id " + id));
+        mapRequestToEntity(request, room);
+        Room updatedRoom = roomRepository.save(room);
+        return RoomResponse.from(updatedRoom);
+    }
+
+    @Override
+    @Transactional
+    public void deleteRoom(Long id) {
+        if (!roomRepository.existsById(id)) {
+            throw new EntityNotFoundException("Room not found with id " + id);
+        }
+        roomRepository.deleteById(id);
+    }
+
+    private void mapRequestToEntity(RoomRequest request, Room room) {
+        room.setName(request.getName());
+        room.setRoomType(request.getRoomType());
+        room.setPricePerNight(request.getPricePerNight());
+        room.setCapacity(request.getCapacity());
+        room.setArea(request.getArea());
+        room.setImage(request.getImage());
+        room.setAmenities(request.getAmenities());
+        room.setAvailable(request.getAvailable());
+        room.setFeatured(request.getFeatured());
+    }
+
     private Sort resolveSort(String sortBy) {
         if (sortBy == null || sortBy.isBlank()) {
             return Sort.by(Sort.Direction.ASC, "pricePerNight");

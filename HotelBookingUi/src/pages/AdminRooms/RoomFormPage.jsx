@@ -1,10 +1,11 @@
 // src/pages/AdminRooms/RoomFormPage.jsx - THÀNH VIÊN 4
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Save, Image as ImageIcon, Check,
-  Users, Maximize2
+  Users, Maximize2, AlertCircle, Loader2
 } from 'lucide-react';
+import adminRoomApi from '../../services/api/adminRoomApi';
 
 const AMENITIES_OPTIONS = [
   'WiFi', 'Điều hòa', 'TV', 'Ban công', 'Tủ lạnh', '2 Giường đôi',
@@ -13,15 +14,8 @@ const AMENITIES_OPTIONS = [
   'Giặt ủi', 'Dịch vụ 24/7', 'Bồn tắm', 'Máy sấy tóc'
 ];
 
-const ROOM_TYPE_OPTIONS = [
-  { value: 'STANDARD', label: 'Standard (Tiêu chuẩn)' },
-  { value: 'DELUXE', label: 'Deluxe (Cao cấp)' },
-  { value: 'SUITE', label: 'Suite (Sang trọng)' },
-  { value: 'PRESIDENTIAL', label: 'Presidential (Thượng hạng)' }
-];
-
 // --- Reusable UI Components ---
-const InputField = ({ label, name, type = 'text', value, onChange, placeholder, icon: Icon, extraContent, required }) => (
+const InputField = ({ label, name, type = 'text', value, onChange, placeholder, icon: Icon, extraContent, required, min }) => (
   <div className="space-y-2">
     <label className="text-xs font-bold text-stone-700 uppercase tracking-wider block">
       {label} {required && <span className="text-rose-500">*</span>}
@@ -33,7 +27,9 @@ const InputField = ({ label, name, type = 'text', value, onChange, placeholder, 
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`w-full ${Icon ? 'pl-10' : 'px-4'} pr-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all`}
+        required={required}
+        min={min}
+        className={`w-full ${Icon ? 'pl-10' : 'px-4'} pr-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all`}
       />
       {Icon && (
         typeof Icon === 'string'
@@ -47,6 +43,10 @@ const InputField = ({ label, name, type = 'text', value, onChange, placeholder, 
 
 // --- Main Page Component ---
 const RoomFormPage = () => {
+  const { id } = useParams(); // có id => Edit mode, không có => Create mode
+  const navigate = useNavigate();
+  const isEditMode = Boolean(id);
+
   const [formData, setFormData] = useState({
     name: '',
     roomType: 'STANDARD',
@@ -55,8 +55,75 @@ const RoomFormPage = () => {
     area: '',
     image: '',
     available: true,
+    featured: false,
     amenities: []
   });
+
+  const [loading, setLoading] = useState(isEditMode); // chỉ loading khi edit
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  // Room types từ backend
+  const [roomTypes, setRoomTypes] = useState([]);
+  const [loadingTypes, setLoadingTypes] = useState(true);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
+  };
+
+  // Luôn fetch danh sách loại phòng từ backend khi vào form
+  useEffect(() => {
+    const fetchRoomTypes = async () => {
+      try {
+        const data = await adminRoomApi.getRoomTypes();
+        // API trả về: [{ value: 'STANDARD', label: 'Standard' }, ...]
+        const list = Array.isArray(data) ? data : (data?.data || []);
+        if (list.length > 0) {
+          setRoomTypes(list);
+          // Đặt lại roomType mặc định = loại đầu tiên từ backend
+          if (!isEditMode) {
+            setFormData(prev => ({ ...prev, roomType: list[0].value }));
+          }
+        }
+      } catch (err) {
+        console.error('Không thể tải loại phòng từ API.', err);
+        showToast('Không thể tải loại phòng từ backend.', 'error');
+      } finally {
+        setLoadingTypes(false);
+      }
+    };
+    fetchRoomTypes();
+  }, [isEditMode]);
+
+  // Nếu là Edit, tải dữ liệu phòng hiện tại
+  useEffect(() => {
+    if (!isEditMode) return;
+    const fetchRoom = async () => {
+      try {
+        const data = await adminRoomApi.getRoomById(id);
+        const room = data?.data || data;
+        setFormData({
+          name: room.name || '',
+          roomType: room.roomType || 'STANDARD',
+          pricePerNight: room.pricePerNight || '',
+          capacity: room.capacity || 2,
+          area: room.area || '',
+          image: room.image || '',
+          available: room.available ?? true,
+          featured: room.featured ?? false,
+          amenities: Array.isArray(room.amenities) ? room.amenities : []
+        });
+      } catch (err) {
+        setError('Không thể tải thông tin phòng. Vui lòng thử lại.');
+        console.error('Error fetching room:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRoom();
+  }, [id, isEditMode]);
 
   // Xử lý thay đổi dữ liệu Form
   const handleChange = (e) => {
@@ -73,21 +140,63 @@ const RoomFormPage = () => {
     }));
   };
 
-  // Xử lý Gửi Form (Submit) - Chỉ mock UI
-  const handleSubmit = (e) => {
+  // Xử lý Submit Form - gọi API thật
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Dữ liệu form (Chưa gọi API):", formData);
-    alert("Nút lưu đã được bấm! Bạn có thể xem dữ liệu form ở màn hình Console.");
+    setSubmitting(true);
+    setError(null);
+    try {
+      const payload = {
+        ...formData,
+        pricePerNight: Number(formData.pricePerNight),
+        capacity: Number(formData.capacity),
+        area: formData.area ? Number(formData.area) : null,
+      };
+
+      if (isEditMode) {
+        await adminRoomApi.updateRoom(id, payload);
+        showToast('Cập nhật phòng thành công!');
+      } else {
+        await adminRoomApi.createRoom(payload);
+        showToast('Thêm phòng mới thành công!');
+      }
+      // Điều hướng về danh sách sau 1 giây để user thấy toast
+      setTimeout(() => navigate('/admin/rooms'), 1200);
+    } catch (err) {
+      const message = err.response?.data?.message || err.message || 'Đã có lỗi xảy ra.';
+      setError(message);
+      console.error('Error saving room:', err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const formatPrice = (price) => {
-    if (!price) return '0 đ';
+    if (!price) return '0 ₫';
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
+
+  // --- Loading State ---
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="w-10 h-10 text-amber-600 animate-spin" />
+        <p className="text-stone-500 font-medium">Đang tải thông tin phòng...</p>
+      </div>
+    );
+  }
 
   // --- Giao diện (Render) ---
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
+      {/* Toast */}
+      {toast.show && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border transition-all duration-300 ${toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+          {toast.type === 'success' ? <Check className="w-5 h-5 text-emerald-600" /> : <AlertCircle className="w-5 h-5 text-rose-600" />}
+          <span className="text-sm font-semibold">{toast.message}</span>
+        </div>
+      )}
+
       {/* Header & Điều hướng */}
       <div className="flex items-center gap-3">
         <Link
@@ -98,13 +207,21 @@ const RoomFormPage = () => {
         </Link>
         <div>
           <h1 className="text-2xl font-serif font-extrabold text-stone-900 tracking-tight">
-            Thêm Phòng Mới
+            {isEditMode ? `Chỉnh sửa phòng #${id}` : 'Thêm Phòng Mới'}
           </h1>
           <p className="text-sm text-stone-500 mt-0.5">
-            Giao diện cấu hình thông số phòng nghỉ.
+            {isEditMode ? 'Cập nhật thông tin phòng nghỉ.' : 'Giao diện cấu hình thông số phòng nghỉ.'}
           </p>
         </div>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span className="text-sm font-semibold">{error}</span>
+        </div>
+      )}
 
       {/* Form Content */}
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -132,16 +249,23 @@ const RoomFormPage = () => {
                 <label className="text-xs font-bold text-stone-700 uppercase tracking-wider block">
                   Loại phòng khách sạn
                 </label>
-                <select
-                  name="roomType"
-                  value={formData.roomType}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-stone-200 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
-                >
-                  {ROOM_TYPE_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
+                {loadingTypes ? (
+                  <div className="w-full px-4 py-2.5 border border-stone-200 rounded-xl bg-stone-50 text-sm text-stone-400 flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                    Đang tải loại phòng...
+                  </div>
+                ) : (
+                  <select
+                    name="roomType"
+                    value={formData.roomType}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 border border-stone-200 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
+                  >
+                    {roomTypes.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <InputField
@@ -151,6 +275,7 @@ const RoomFormPage = () => {
                 value={formData.capacity}
                 onChange={handleChange}
                 required
+                min="1"
                 placeholder="Số lượng người ở"
                 icon={Users}
               />
@@ -164,9 +289,10 @@ const RoomFormPage = () => {
                 value={formData.pricePerNight}
                 onChange={handleChange}
                 required
+                min="0"
                 placeholder="Ví dụ: 850000"
                 icon="₫"
-                extraContent={<p className="text-[11px] text-stone-400">Xem trước giá: <strong className="text-gold-600">{formatPrice(formData.pricePerNight)}</strong></p>}
+                extraContent={<p className="text-[11px] text-stone-400">Xem trước giá: <strong className="text-amber-600">{formatPrice(formData.pricePerNight)}</strong></p>}
               />
 
               <InputField
@@ -175,7 +301,7 @@ const RoomFormPage = () => {
                 type="number"
                 value={formData.area}
                 onChange={handleChange}
-                required
+                min="1"
                 placeholder="Ví dụ: 35"
                 icon={Maximize2}
               />
@@ -205,18 +331,23 @@ const RoomFormPage = () => {
             </Link>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 bg-gold-600 hover:bg-gold-700 text-white font-bold px-8 py-2.5 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 text-sm"
+              disabled={submitting}
+              className="inline-flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 disabled:bg-stone-400 text-white font-bold px-8 py-2.5 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 text-sm"
             >
-              <Save className="w-4 h-4" /> Lưu phòng nghỉ
+              {submitting
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Đang lưu...</>
+                : <><Save className="w-4 h-4" /> {isEditMode ? 'Lưu thay đổi' : 'Thêm phòng'}</>
+              }
             </button>
           </div>
         </div>
 
-        {/* CỘT PHẢI: Xem trước ảnh và Tiện ích */}
+        {/* CỘT PHẢI: Xem trước ảnh, Trạng thái, Tiện ích */}
         <div className="space-y-6">
 
+          {/* Xem trước ảnh */}
           <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-stone-850 uppercase tracking-wider font-serif">Xem trước ảnh phòng</h3>
+            <h3 className="text-sm font-bold text-stone-800 uppercase tracking-wider font-serif">Xem trước ảnh phòng</h3>
             <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-stone-200 bg-stone-50 flex items-center justify-center text-stone-300">
               {formData.image ? (
                 <img
@@ -224,23 +355,22 @@ const RoomFormPage = () => {
                   alt="Preview"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.src = '';
-                    e.target.className = 'hidden';
-                    e.target.parentNode.innerHTML = '<span class="text-xs text-rose-500 font-medium px-4 text-center">Không tải được ảnh từ link đã cung cấp!</span>';
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
                   }}
                 />
-              ) : (
-                <div className="text-center p-4">
-                  <ImageIcon className="w-8 h-8 mx-auto mb-2 text-stone-300" />
-                  <span className="text-xs text-stone-400">Chưa có ảnh</span>
-                </div>
-              )}
+              ) : null}
+              <div className={`absolute inset-0 items-center justify-center text-center p-4 ${formData.image ? 'hidden' : 'flex'} flex-col`}>
+                <ImageIcon className="w-8 h-8 mx-auto mb-2 text-stone-300" />
+                <span className="text-xs text-stone-400">Chưa có ảnh</span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-stone-850 uppercase tracking-wider font-serif">Trạng thái phòng</h3>
-            <div className="flex items-center justify-between p-3.5 bg-stone-50 rounded-2xl border border-stone-150">
+          {/* Trạng thái phòng */}
+          <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-3">
+            <h3 className="text-sm font-bold text-stone-800 uppercase tracking-wider font-serif">Trạng thái phòng</h3>
+            <div className="flex items-center justify-between p-3.5 bg-stone-50 rounded-2xl border border-stone-100">
               <div>
                 <span className="text-xs font-bold text-stone-700 block">Sẵn sàng đón khách</span>
                 <span className="text-[10px] text-stone-400 mt-0.5 block">Cho phép khách tìm kiếm & đặt phòng</span>
@@ -253,15 +383,32 @@ const RoomFormPage = () => {
                   onChange={handleChange}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
+                <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
+            </div>
+            <div className="flex items-center justify-between p-3.5 bg-stone-50 rounded-2xl border border-stone-100">
+              <div>
+                <span className="text-xs font-bold text-stone-700 block">Phòng nổi bật</span>
+                <span className="text-[10px] text-stone-400 mt-0.5 block">Hiển thị trên trang chủ & kết quả tìm kiếm</span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="featured"
+                  checked={formData.featured}
+                  onChange={handleChange}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
               </label>
             </div>
           </div>
 
+          {/* Tiện ích phòng */}
           <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-stone-850 uppercase tracking-wider font-serif">Tiện ích phòng</h3>
-              <span className="text-xs text-gold-600 font-bold bg-gold-50 border border-gold-200 px-2 py-0.5 rounded-lg">
+              <h3 className="text-sm font-bold text-stone-800 uppercase tracking-wider font-serif">Tiện ích phòng</h3>
+              <span className="text-xs text-amber-700 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">
                 Đã chọn: {formData.amenities.length}
               </span>
             </div>
@@ -274,11 +421,11 @@ const RoomFormPage = () => {
                     type="button"
                     onClick={() => handleAmenityChange(amenity)}
                     className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-semibold text-left transition-all duration-150 ${isChecked
-                      ? 'bg-gold-50 border-gold-500 text-gold-800'
+                      ? 'bg-amber-50 border-amber-400 text-amber-800'
                       : 'bg-white border-stone-200 hover:bg-stone-50 text-stone-600'
                       }`}
                   >
-                    <span className={`w-4 h-4 rounded flex items-center justify-center border flex-shrink-0 ${isChecked ? 'bg-gold-600 border-gold-600 text-white' : 'border-stone-300 bg-white'
+                    <span className={`w-4 h-4 rounded flex items-center justify-center border flex-shrink-0 ${isChecked ? 'bg-amber-500 border-amber-500 text-white' : 'border-stone-300 bg-white'
                       }`}>
                       {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
                     </span>
