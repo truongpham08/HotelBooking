@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -31,6 +33,8 @@ public class BookingDTO {
     @NotNull(message = "Check-out date is required")
     private LocalDate checkOut;
     
+    @NotNull(message = "Số khách là bắt buộc")
+    @Min(value = 1, message = "Số khách phải lớn hơn 0")
     private Integer capacity;
     private Integer nights;
     private BigDecimal subTotal;
@@ -56,6 +60,7 @@ public class BookingDTO {
         private String fullName;
         
         @NotBlank(message = "Email is required")
+        @Email(message = "Email không đúng định dạng")
         private String email;
         
         @NotBlank(message = "Phone is required")

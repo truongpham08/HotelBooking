@@ -7,31 +7,47 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
+import java.time.temporal.ChronoUnit;
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
+    private final RoomService roomService;
 
     @Override
     public BookingDTO createBooking(BookingDTO dto) {
-        String bookingId = dto.getId() != null ? dto.getId() : "BOOK-" + System.currentTimeMillis();
+        var room = roomService.getRoomById(dto.getRoomId());
+        if (!room.isAvailable()) {
+            throw new IllegalArgumentException("Phòng này hiện đã hết");
+        }
+        if (!dto.getCheckOut().isAfter(dto.getCheckIn())) {
+            throw new IllegalArgumentException("Ngày trả phòng phải sau ngày nhận phòng");
+        }
+        if (dto.getCapacity() > room.getCapacity()) {
+            throw new IllegalArgumentException("Phòng chỉ phù hợp tối đa " + room.getCapacity() + " khách");
+        }
+
+        int nights = (int) ChronoUnit.DAYS.between(dto.getCheckIn(), dto.getCheckOut());
+        BigDecimal subTotal = room.getPricePerNight().multiply(BigDecimal.valueOf(nights));
+        BigDecimal serviceFee = subTotal.multiply(new BigDecimal("0.08"));
+        BigDecimal totalAmount = subTotal.add(serviceFee);
+        String bookingId = "BOOK-" + System.currentTimeMillis();
 
         Booking booking = Booking.builder()
                 .id(bookingId)
                 .roomId(dto.getRoomId())
-                .roomName(dto.getRoomName())
-                .pricePerNight(dto.getPricePerNight())
+                .roomName(room.getName())
+                .pricePerNight(room.getPricePerNight())
                 .checkIn(dto.getCheckIn())
                 .checkOut(dto.getCheckOut())
                 .capacity(dto.getCapacity())
-                .nights(dto.getNights())
-                .subTotal(dto.getSubTotal())
-                .serviceFee(dto.getServiceFee())
-                .totalAmount(dto.getTotalAmount())
+                .nights(nights)
+                .subTotal(subTotal)
+                .serviceFee(serviceFee)
+                .totalAmount(totalAmount)
                 .customerFullName(dto.getCustomer().getFullName())
                 .customerEmail(dto.getCustomer().getEmail())
                 .customerPhone(dto.getCustomer().getPhone())
