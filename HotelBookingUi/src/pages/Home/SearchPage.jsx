@@ -206,6 +206,19 @@ const SearchPage = () => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleSearch = (values, params) => {
+    setCurrentPage(0);
+    setFilters((prev) => ({
+      ...prev,
+      keyword: values.keyword,
+      checkIn: values.checkIn,
+      checkOut: values.checkOut,
+      capacity: values.capacity,
+      roomType: '',
+    }));
+    setSearchParams(params);
+  };
+
   const resetFilters = () => {
     setCurrentPage(0);
     setFilters({
@@ -344,6 +357,7 @@ const SearchPage = () => {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <SearchBar
             compact
+            onSearch={handleSearch}
             initialValues={{
               keyword: filters.keyword,
               checkIn: filters.checkIn,
