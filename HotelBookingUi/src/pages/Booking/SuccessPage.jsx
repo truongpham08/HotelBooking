@@ -1,135 +1,94 @@
-﻿import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import bookingApi from '../../services/api/bookingApi';
 
 const formatPrice = (price) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price || 0);
+
+const formatDate = (date) => date
+  ? new Date(`${date}T00:00:00`).toLocaleDateString('vi-VN')
+  : '—';
 
 const SuccessPage = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const bookingId = searchParams.get('bookingId');
   const [booking, setBooking] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem('hotel_booking_confirmation');
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed?.id === bookingId) {
-        setBooking(parsed);
+    const loadBooking = async () => {
+      if (!bookingId) return setLoading(false);
+      try {
+        const response = await bookingApi.getBookingById(bookingId);
+        if (response?.success) setBooking(response.data);
+      } catch {
+        setBooking(null);
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      // ignore
-    }
+    };
+    loadBooking();
   }, [bookingId]);
+
+  if (loading) return <div className="min-h-[60vh] grid place-items-center text-stone-500">Đang tải thông tin đặt phòng...</div>;
 
   if (!booking) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-3xl border border-stone-200 p-10 shadow-lg text-center max-w-xl">
-          <h1 className="text-3xl font-bold text-stone-900 mb-4">Không tìm thấy đặt phòng</h1>
-          <p className="text-stone-600 mb-6">Thông tin đặt phòng đã hết hạn hoặc bạn chưa thực hiện giao dịch nào.</p>
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="inline-flex items-center justify-center rounded-3xl bg-gold-600 px-6 py-3 text-white font-semibold hover:bg-gold-700 transition"
-          >
-            Về trang chủ
-          </button>
+      <div className="min-h-[60vh] grid place-items-center px-4 text-center">
+        <div>
+          <h1 className="text-2xl font-semibold text-stone-900">Không tìm thấy đặt phòng</h1>
+          <p className="mt-2 text-stone-500">Thông tin đặt phòng không tồn tại hoặc đã hết hạn.</p>
+          <Link to="/search" className="mt-5 inline-block rounded-md bg-gold-600 px-5 py-2.5 font-medium text-white">Tìm phòng</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 py-10">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="rounded-[2rem] bg-white border border-stone-200 p-10 shadow-sm">
-          <div className="text-center mb-8">
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-3xl text-emerald-700">
-              ✓
-            </div>
-            <h1 className="text-4xl font-extrabold text-stone-900">Đặt phòng thành công!</h1>
-            <p className="mt-3 text-stone-500">Cám ơn bạn đã đặt phòng. Chúng tôi đã gửi xác nhận qua email.</p>
+    <main className="bg-stone-50 py-10 sm:py-16">
+      <div className="mx-auto max-w-2xl px-4">
+        <div className="rounded-lg border border-stone-200 bg-white p-6 sm:p-9">
+          <div className="text-center">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-2xl text-emerald-700">✓</div>
+            <h1 className="mt-4 text-3xl font-semibold text-stone-900">Đặt phòng thành công</h1>
+            <p className="mt-2 text-stone-500">Xác nhận đã được gửi đến email của bạn.</p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-[1.75rem] bg-stone-50 p-6">
-              <p className="text-xs uppercase tracking-[0.24em] text-stone-500 mb-3">Mã đặt phòng</p>
-              <p className="text-3xl font-bold text-stone-900">{booking.id}</p>
-              <p className="mt-3 text-sm text-stone-600">Vui lòng lưu lại mã này để tra cứu và liên hệ hỗ trợ.</p>
-            </div>
-            <div className="rounded-[1.75rem] bg-stone-50 p-6">
-              <p className="text-xs uppercase tracking-[0.24em] text-stone-500 mb-3">Khách hàng</p>
-              <p className="font-semibold text-stone-900">{booking.customer.fullName}</p>
-              <p className="text-sm text-stone-600">{booking.customer.email}</p>
-              <p className="text-sm text-stone-600">{booking.customer.phone}</p>
-            </div>
+          <div className="mt-7 rounded-md bg-stone-50 p-4 text-center">
+            <p className="text-xs uppercase tracking-wider text-stone-500">Mã đặt phòng</p>
+            <p className="mt-1 text-xl font-semibold text-stone-900">{booking.id}</p>
           </div>
 
-          <div className="mt-8 grid gap-6 md:grid-cols-2">
-            <div className="rounded-[1.75rem] bg-white border border-stone-200 p-6 shadow-sm">
-              <p className="text-sm font-semibold text-stone-700 mb-4">Chi tiết phòng</p>
-              <div className="space-y-3 text-sm text-stone-600">
-                <div className="flex justify-between">
-                  <span>Phòng</span>
-                  <span className="font-semibold text-stone-900">{booking.roomName}</span>
+          <div className="mt-7">
+            <h2 className="font-semibold text-stone-900">Chi tiết đặt phòng</h2>
+            <dl className="mt-3 divide-y divide-stone-200 text-sm">
+              {[
+                ['Phòng', booking.roomName],
+                ['Khách hàng', booking.customer?.fullName],
+                ['Nhận phòng', formatDate(booking.checkIn)],
+                ['Trả phòng', formatDate(booking.checkOut)],
+                ['Thời gian', `${booking.nights} đêm · ${booking.capacity} khách`],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between gap-4 py-3">
+                  <dt className="text-stone-500">{label}</dt>
+                  <dd className="text-right font-medium text-stone-800">{value || '—'}</dd>
                 </div>
-                <div className="flex justify-between">
-                  <span>Nhận phòng</span>
-                  <span>{booking.checkIn}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Trả phòng</span>
-                  <span>{booking.checkOut}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Số đêm</span>
-                  <span>{booking.nights}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Khách</span>
-                  <span>{booking.capacity} khách</span>
-                </div>
+              ))}
+              <div className="flex justify-between gap-4 py-4 text-base">
+                <dt className="font-semibold text-stone-900">Tổng thanh toán</dt>
+                <dd className="font-semibold text-gold-700">{formatPrice(booking.totalAmount)}</dd>
               </div>
-            </div>
-            <div className="rounded-[1.75rem] bg-white border border-stone-200 p-6 shadow-sm">
-              <p className="text-sm font-semibold text-stone-700 mb-4">Hóa đơn</p>
-              <div className="space-y-3 text-sm text-stone-600">
-                <div className="flex justify-between">
-                  <span>Tạm tính</span>
-                  <span>{formatPrice(booking.subTotal)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Phí dịch vụ</span>
-                  <span>{formatPrice(booking.serviceFee)}</span>
-                </div>
-                <div className="flex justify-between font-semibold text-stone-900 border-t border-stone-200 pt-3">
-                  <span>Tổng</span>
-                  <span>{formatPrice(booking.totalAmount)}</span>
-                </div>
-              </div>
-            </div>
+            </dl>
           </div>
 
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <Link
-              to="/"
-              className="inline-flex items-center justify-center rounded-3xl border border-stone-200 px-6 py-3 text-sm font-semibold text-stone-700 transition hover:bg-stone-100"
-            >
-              Quay về trang chủ
-            </Link>
-            <button
-              type="button"
-              onClick={() => navigate('/search')}
-              className="inline-flex items-center justify-center rounded-3xl bg-gold-600 px-6 py-3 text-sm font-semibold text-white hover:bg-gold-700 transition"
-            >
-              Xem thêm phòng
-            </button>
+          <p className="mt-4 text-center text-sm text-stone-500">Vui lòng lưu mã đặt phòng để tiện tra cứu khi nhận phòng.</p>
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <Link to="/" className="flex-1 rounded-md border border-stone-300 px-4 py-2.5 text-center font-medium text-stone-700 hover:bg-stone-50">Về trang chủ</Link>
+            <Link to="/search" className="flex-1 rounded-md bg-gold-600 px-4 py-2.5 text-center font-medium text-white hover:bg-gold-700">Xem thêm phòng</Link>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

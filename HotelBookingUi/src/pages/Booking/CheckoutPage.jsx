@@ -2,6 +2,7 @@
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import roomApi from '../../services/api/roomApi';
+import bookingApi from '../../services/api/bookingApi';
 
 const formatPrice = (price) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -26,6 +27,7 @@ const CheckoutPage = () => {
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     fullName: user?.name || '',
     email: user?.email || '',
@@ -92,7 +94,7 @@ const CheckoutPage = () => {
     setReservation((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!room) return;
     if (!reservation.checkIn || !reservation.checkOut || nights <= 0) {
@@ -105,17 +107,10 @@ const CheckoutPage = () => {
     }
 
     const booking = {
-      id: `BOOK-${Date.now()}`,
       roomId: room.id,
-      roomName: room.name,
-      pricePerNight: room.pricePerNight,
       checkIn: reservation.checkIn,
       checkOut: reservation.checkOut,
-      capacity: reservation.capacity,
-      nights,
-      subTotal,
-      serviceFee,
-      totalAmount,
+      capacity: Number(reservation.capacity),
       customer: {
         fullName: form.fullName,
         email: form.email,
@@ -123,11 +118,22 @@ const CheckoutPage = () => {
       },
       paymentMethod: form.paymentMethod,
       requests: form.requests,
-      createdAt: new Date().toISOString(),
     };
 
-    sessionStorage.setItem('hotel_booking_confirmation', JSON.stringify(booking));
-    navigate(`/success?bookingId=${booking.id}`);
+    setSubmitting(true);
+    setError('');
+    try {
+      const response = await bookingApi.createBooking(booking);
+      if (!response?.success || !response.data?.id) {
+        throw new Error(response?.message || 'Không thể tạo đơn đặt phòng.');
+      }
+      sessionStorage.setItem('hotel_booking_confirmation', JSON.stringify(response.data));
+      navigate(`/success?bookingId=${response.data.id}`);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || requestError.message || 'Không thể tạo đơn đặt phòng. Vui lòng thử lại.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -286,9 +292,10 @@ const CheckoutPage = () => {
 
             <button
               type="submit"
+              disabled={submitting}
               className="w-full rounded-3xl bg-gold-600 px-6 py-4 text-base font-bold text-white shadow-lg transition hover:bg-gold-700 active:scale-[0.99]"
             >
-              Xác nhận đặt phòng
+              {submitting ? 'Đang xử lý...' : 'Xác nhận đặt phòng'}
             </button>
           </form>
 
