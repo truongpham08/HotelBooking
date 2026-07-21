@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@EnableMethodSecurity // KÃ­ch hoáº¡t @PreAuthorize("hasRole('ADMIN')")
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -16,7 +16,7 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/admin/**").permitAll() // Táº¡m thá»i permitAll Ä‘á»ƒ test khÃ´ng cáº§n JWT, khi ná»‘i JWT thÃ¬ Ä‘á»•i thÃ nh authenticated
+                .requestMatchers("/api/admin/**").permitAll()
                 .anyRequest().permitAll()
             );
         return http.build();
