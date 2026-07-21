@@ -54,7 +54,7 @@ const HomePage = () => {
         setFeaturedRooms(rooms);
       } catch {
         setFeaturedRooms([]);
-        setFeaturedRoomsError('Khong the tai phong noi bat. Hay kiem tra backend va thu lai.');
+        setFeaturedRoomsError('Không thể tải phòng nổi bật. Hãy kiểm tra backend và thử lại.');
       } finally {
         setLoadingRooms(false);
       }

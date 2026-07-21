@@ -55,8 +55,8 @@ const BookingList = () => {
     <div className="p-8 min-h-screen bg-gray-50/50">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Booking Management</h1>
-          <p className="text-gray-500 mt-2">Manage customer reservations and room assignments</p>
+          <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Quản Lý Đặt Phòng</h1>
+          <p className="text-gray-500 mt-2">Quản lý các đơn đặt phòng và phân bổ phòng cho khách</p>
         </div>
         <div className="flex w-full md:w-auto items-center gap-3">
           <div className="relative w-full md:w-64">
@@ -65,7 +65,7 @@ const BookingList = () => {
             </div>
             <input
               type="text"
-              placeholder="Search bookings..."
+              placeholder="Tìm kiếm đơn đặt..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm transition-all"
@@ -87,13 +87,13 @@ const BookingList = () => {
             <table className="min-w-full divide-y divide-gray-100">
               <thead className="bg-gray-50/50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Room</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date Range</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mã số</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Khách hàng</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Phòng</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Thời gian</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tổng cộng</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-50">
@@ -139,7 +139,10 @@ const BookingList = () => {
                           b.status === "COMPLETED" ? "bg-blue-500" :
                           "bg-red-500"
                         }`}></span>
-                        {b.status}
+                        {b.status === "PENDING" ? "Chờ xử lý" :
+                         b.status === "APPROVED" ? "Đã duyệt" :
+                         b.status === "COMPLETED" ? "Hoàn thành" :
+                         "Đã hủy"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -148,14 +151,14 @@ const BookingList = () => {
                           <button
                             onClick={() => handleApprove(b.id)}
                             className="flex items-center justify-center p-2 bg-green-50 text-green-600 hover:bg-green-500 hover:text-white rounded-xl transition-all duration-200"
-                            title="Approve"
+                            title="Duyệt"
                           >
                             <CheckCircle size={18} />
                           </button>
                           <button
                             onClick={() => handleCancel(b.id)}
                             className="flex items-center justify-center p-2 bg-red-50 text-red-600 hover:bg-red-500 hover:text-white rounded-xl transition-all duration-200"
-                            title="Cancel"
+                            title="Hủy"
                           >
                             <XCircle size={18} />
                           </button>
@@ -169,8 +172,8 @@ const BookingList = () => {
                     <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                       <div className="flex flex-col items-center justify-center">
                         <Search className="w-12 h-12 text-gray-300 mb-4" />
-                        <p className="text-lg font-medium text-gray-600">No bookings found</p>
-                        <p className="text-sm">Try adjusting your search query</p>
+                        <p className="text-lg font-medium text-gray-600">Không tìm thấy đơn đặt phòng nào</p>
+                        <p className="text-sm">Hãy thử điều chỉnh từ khóa tìm kiếm</p>
                       </div>
                     </td>
                   </tr>
