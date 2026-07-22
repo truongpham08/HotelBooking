@@ -6,9 +6,9 @@ import java.util.List;
 
 public interface BookingService {
     BookingResponse createBooking(CreateBookingRequest request, Long userId);
-    BookingResponse getBookingById(String id);
+    BookingResponse getBookingById(Long id);
     List<BookingResponse> getBookingsByUserId(Long userId);
     List<BookingResponse> getAllBookings();
-    BookingResponse updateBookingStatus(String id, String status);
+    BookingResponse updateBookingStatus(Long id, String status);
 }
 

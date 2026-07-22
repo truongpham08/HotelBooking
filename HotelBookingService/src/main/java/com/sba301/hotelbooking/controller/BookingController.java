@@ -40,7 +40,7 @@ public class BookingController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<BookingResponse> getBookingById(@PathVariable String id) {
+    public ApiResponse<BookingResponse> getBookingById(@PathVariable Long id) {
         return ApiResponse.success(bookingService.getBookingById(id), "Booking retrieved successfully");
     }
 

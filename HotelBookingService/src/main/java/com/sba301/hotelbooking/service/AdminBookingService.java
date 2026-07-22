@@ -8,6 +8,6 @@ import com.sba301.hotelbooking.dto.response.DashboardStatsResponse;
 
 public interface AdminBookingService {
     List<BookingResponse> getAllBookings();
-    BookingResponse updateBookingStatus(String id, UpdateBookingStatusRequest request);
+    BookingResponse updateBookingStatus(Long id, UpdateBookingStatusRequest request);
     DashboardStatsResponse getDashboardStats();
 }

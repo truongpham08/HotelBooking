@@ -44,7 +44,7 @@ public record BookingResponse(
                 ? "User " + booking.getUserId()
                 : booking.getCustomerFullName();
         return new BookingResponse(
-                booking.getId(), booking.getRoomId(), roomName, roomName,
+                String.valueOf(booking.getId()), booking.getRoomId(), roomName, roomName,
                 booking.getPricePerNight(), booking.getCheckInDate(), booking.getCheckOutDate(),
                 booking.getCheckInDate(), booking.getCheckOutDate(), booking.getCapacity(), booking.getNights(),
                 booking.getSubTotal(), booking.getServiceFee(), booking.getTotalAmount(), booking.getTotalAmount(),

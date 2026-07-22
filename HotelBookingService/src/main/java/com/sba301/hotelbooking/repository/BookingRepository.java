@@ -10,7 +10,7 @@ import java.util.List;
 import com.sba301.hotelbooking.enums.BookingStatus;
 
 @Repository
-public interface BookingRepository extends JpaRepository<Booking, String> {
+public interface BookingRepository extends JpaRepository<Booking, Long> {
     @org.springframework.data.jpa.repository.Query("SELECT SUM(b.totalAmount) FROM Booking b")
     java.math.BigDecimal calculateTotalRevenue();
 

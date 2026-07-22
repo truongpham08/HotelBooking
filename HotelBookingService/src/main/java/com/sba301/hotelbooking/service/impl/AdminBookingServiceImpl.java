@@ -1,9 +1,10 @@
-package com.sba301.hotelbooking.service;
+package com.sba301.hotelbooking.service.impl;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.sba301.hotelbooking.service.AdminBookingService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +36,7 @@ public class AdminBookingServiceImpl implements AdminBookingService {
 
     @Override
     @Transactional
-    public BookingResponse updateBookingStatus(String id, UpdateBookingStatusRequest request) {
+    public BookingResponse updateBookingStatus(Long id, UpdateBookingStatusRequest request) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + id));
         

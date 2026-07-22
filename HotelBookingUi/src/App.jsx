@@ -28,6 +28,7 @@ import RoomFormPage from './pages/AdminRooms/RoomFormPage';
 // Phân hệ 5: Admin Bookings (Thành viên 5)
 import BookingListPage from './pages/AdminBookings/BookingListPage';
 import DashboardPage from './pages/AdminBookings/DashboardPage';
+import UserListPage from './pages/AdminUsers/UserListPage';
 
 function App() {
   return (
@@ -60,6 +61,8 @@ function App() {
               
               {/* Quản lý danh sách đơn hàng (Thành viên 5) */}
               <Route path="bookings" element={<BookingListPage />} />
+
+              <Route path="users" element={<UserListPage />} />
               
               {/* Quản lý danh sách phòng (Thành viên 4) */}
               <Route path="rooms" element={<RoomListPage />} />

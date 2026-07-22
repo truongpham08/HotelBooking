@@ -85,7 +85,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public BookingResponse getBookingById(String id) {
+    public BookingResponse getBookingById(Long id) {
         Booking booking = findBooking(id);
         return BookingResponse.from(booking, roomRepository.findById(booking.getRoomId()).orElse(null));
     }
@@ -102,7 +102,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public BookingResponse updateBookingStatus(String id, String status) {
+    public BookingResponse updateBookingStatus(Long id, String status) {
         Booking booking = findBooking(id);
         try {
             booking.setStatus(BookingStatus.valueOf(status.toUpperCase()));
@@ -112,7 +112,7 @@ public class BookingServiceImpl implements BookingService {
         return mapToResponse(bookingRepository.save(booking));
     }
 
-    private Booking findBooking(String id) {
+    private Booking findBooking(Long id) {
         return bookingRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Booking not found with id: " + id));
     }

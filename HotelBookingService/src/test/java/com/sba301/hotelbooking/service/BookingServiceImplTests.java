@@ -42,7 +42,7 @@ class BookingServiceImplTests {
         when(roomRepository.findById(10L)).thenReturn(Optional.of(room));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
             Booking booking = invocation.getArgument(0);
-            booking.setId("BOOK-test");
+            booking.setId(1L);
             return booking;
         });
     }

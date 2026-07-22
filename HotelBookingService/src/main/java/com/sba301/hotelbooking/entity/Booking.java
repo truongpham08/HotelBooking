@@ -5,7 +5,6 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 import com.sba301.hotelbooking.enums.BookingStatus;
 
 @Entity
@@ -13,7 +12,8 @@ import com.sba301.hotelbooking.enums.BookingStatus;
 @Data
 public class Booking {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "user_id")
     private Long userId;
@@ -31,7 +31,6 @@ public class Booking {
     private BigDecimal pricePerNight;
     private BigDecimal subTotal;
     private BigDecimal serviceFee;
-    @Column(columnDefinition = "nvarchar(255)")
     private String customerFullName;
     private String customerEmail;
     private String customerPhone;
@@ -47,7 +46,6 @@ public class Booking {
 
     @PrePersist
     void prePersist() {
-        if (id == null) id = "BOOK-" + UUID.randomUUID();
         if (createdAt == null) createdAt = LocalDateTime.now();
         if (status == null) status = BookingStatus.PENDING;
     }

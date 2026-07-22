@@ -8,6 +8,7 @@ const AdminLayout = () => {
     { label: '📊 Tổng Quan Thống Kê', path: '/admin' },
     { label: '🔑 Quản Lý Phòng', path: '/admin/rooms' },
     { label: '📅 Quản Lý Đơn Đặt', path: '/admin/bookings' },
+    { label: '👥 Quản Lý Người Dùng', path: '/admin/users' },
   ];
 
   return (
