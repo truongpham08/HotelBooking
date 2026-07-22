@@ -31,6 +31,7 @@ public class Booking {
     private BigDecimal pricePerNight;
     private BigDecimal subTotal;
     private BigDecimal serviceFee;
+    @Column(columnDefinition = "nvarchar(255)")
     private String customerFullName;
     private String customerEmail;
     private String customerPhone;
