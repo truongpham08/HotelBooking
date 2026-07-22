@@ -1,8 +1,12 @@
 package com.sba301.hotelbooking.service.impl;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.sba301.hotelbooking.enums.BookingStatus;
+import com.sba301.hotelbooking.entity.Room;
 
 import com.sba301.hotelbooking.service.AdminBookingService;
 import org.springframework.stereotype.Service;
@@ -55,9 +59,18 @@ public class AdminBookingServiceImpl implements AdminBookingService {
         }
         
         long totalBookings = bookingRepository.count();
-        long availableRooms = roomRepository.findAll().stream()
+        
+        List<Room> activeRooms = roomRepository.findAll().stream()
                 .filter(room -> Boolean.TRUE.equals(room.getAvailable()))
+                .collect(Collectors.toList());
+                
+        LocalDate today = LocalDate.now();
+        long occupiedRoomsToday = activeRooms.stream()
+                .filter(room -> bookingRepository.existsByRoomIdAndStatusNotAndCheckInDateLessThanAndCheckOutDateGreaterThan(
+                        room.getId(), BookingStatus.CANCELLED, today.plusDays(1), today))
                 .count();
+                
+        long availableRooms = activeRooms.size() - occupiedRoomsToday;
                 
         return new DashboardStatsResponse(totalRevenue, totalBookings, availableRooms);
     }
